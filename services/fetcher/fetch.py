@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Fetch US ISO curtailment data and upsert into Postgres.
 
-Runs daily (via GitHub Actions cron). On first run, backfills BACKFILL_DAYS.
-Source: gridstatus library (wraps CAISO daily renewables HTML report).
-Note: CAISO report is published with a 1-day lag; gridstatus covers ~30 days back.
+ISOs covered:
+  CAISO — California (solar + wind via gridstatus daily HTML report, ~30-day window)
+  SPP   — Southwest Power Pool (wind + solar VER curtailments, full CSV archive)
+  ERCOT — Texas (solar + wind estimated from PVGRPP/WGRPP vs actual generation)
+
+Runs daily via GitHub Actions cron. On first run, backfills BACKFILL_DAYS.
 """
 
 from __future__ import annotations
@@ -19,10 +22,9 @@ import pandas as pd
 import psycopg2
 import psycopg2.extras
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL  = os.environ["DATABASE_URL"]
 BACKFILL_DAYS = int(os.environ.get("BACKFILL_DAYS", "30"))
-# If FETCH_DATE is set (YYYY-MM-DD), fetch only that date.
-FETCH_DATE = os.environ.get("FETCH_DATE")
+FETCH_DATE    = os.environ.get("FETCH_DATE")  # YYYY-MM-DD — fetch only this date
 
 
 class CurtailmentRow(TypedDict):
@@ -34,10 +36,10 @@ class CurtailmentRow(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# CAISO — primary via gridstatus, fallback to OASIS direct
+# CAISO — gridstatus scrapes daily HTML renewables report (1-day lag, ~30 days)
 # ---------------------------------------------------------------------------
 
-def _caiso_via_gridstatus(target: date) -> CurtailmentRow | None:
+def fetch_caiso(target: date) -> CurtailmentRow | None:
     try:
         import gridstatus
 
@@ -49,9 +51,8 @@ def _caiso_via_gridstatus(target: date) -> CurtailmentRow | None:
 
         df.columns = [str(c).strip() for c in df.columns]
 
-        # Actual gridstatus schema: Fuel Type + Curtailment MWH (already in MWh, no conversion needed)
         if "Fuel Type" not in df.columns or "Curtailment MWH" not in df.columns:
-            print(f"[CAISO/gridstatus] Unexpected columns: {list(df.columns)[:8]}")
+            print(f"[CAISO] Unexpected columns: {list(df.columns)[:8]}")
             return None
 
         df["Curtailment MWH"] = pd.to_numeric(df["Curtailment MWH"], errors="coerce").fillna(0)
@@ -66,16 +67,123 @@ def _caiso_via_gridstatus(target: date) -> CurtailmentRow | None:
             total_mwh=round(solar_mwh + wind_mwh, 2),
         )
     except Exception as exc:
-        print(f"[CAISO/gridstatus] failed: {exc}")
+        print(f"[CAISO] failed: {exc}")
         return None
 
 
-def fetch_caiso(target: date) -> CurtailmentRow | None:
-    return _caiso_via_gridstatus(target)
+# ---------------------------------------------------------------------------
+# SPP — Southwest Power Pool VER curtailment CSV archive
+#   288 five-minute intervals/day in MW → sum × (5/60) = daily MWh
+#   Wind columns: Redispatch + Manual + Curtailed For Energy
+#   Solar columns: same three categories
+# ---------------------------------------------------------------------------
+
+_SPP_WIND_COLS  = [
+    "Wind Redispatch Curtailments",
+    "Wind Manual Curtailments",
+    "Wind Curtailed For Energy",
+]
+_SPP_SOLAR_COLS = [
+    "Solar Redispatch Curtailments",
+    "Solar Manual Curtailments",
+    "Solar Curtailed For Energy",
+]
+_SPP_INTERVAL_H = 5 / 60  # each row = 5-minute average in MW
 
 
-# ERCOT curtailment is not available via gridstatus as of this writing.
-# Placeholder — add implementation when a reliable source is found.
+def fetch_spp(target: date) -> CurtailmentRow | None:
+    try:
+        import gridstatus
+
+        spp = gridstatus.SPP()
+        df  = spp.get_ver_curtailments(target.isoformat())
+
+        if df is None or df.empty:
+            return None
+
+        for col in _SPP_WIND_COLS + _SPP_SOLAR_COLS:
+            if col not in df.columns:
+                print(f"[SPP] Missing column '{col}' — columns: {list(df.columns)}")
+                return None
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+        wind_mwh  = float(df[_SPP_WIND_COLS].sum().sum()  * _SPP_INTERVAL_H)
+        solar_mwh = float(df[_SPP_SOLAR_COLS].sum().sum() * _SPP_INTERVAL_H)
+
+        return CurtailmentRow(
+            iso="SPP",
+            date=target,
+            solar_mwh=round(solar_mwh, 2),
+            wind_mwh=round(wind_mwh, 2),
+            total_mwh=round(solar_mwh + wind_mwh, 2),
+        )
+    except Exception as exc:
+        print(f"[SPP] failed: {exc}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# ERCOT — Texas
+#   Curtailment estimated as max(0, resource_potential − actual_generation).
+#   Wind: WGRPP (Wind Generation Resource Production Potential) vs GEN SYSTEM WIDE
+#   Solar: PVGRPP (PV Generation Resource Production Potential) vs GEN SYSTEM WIDE
+#   ERCOT publishes hourly reports with a ~2-day lag, so we try offset +2..+5.
+# ---------------------------------------------------------------------------
+
+import pytz as _pytz
+
+_ERCOT_CT = _pytz.timezone("US/Central")
+
+
+def _ercot_day_curtailment(fetch_fn, target: date, gen_col: str, potential_col: str) -> float:
+    for offset in range(2, 6):
+        try:
+            fetch_date = (target + timedelta(days=offset)).isoformat()
+            df = fetch_fn(fetch_date)
+            if df is None or df.empty:
+                continue
+            df = df.copy()
+            df["_date"] = df["Interval Start"].dt.tz_convert(_ERCOT_CT).dt.date
+            df = df[df["_date"] == target]
+            if df.empty:
+                continue
+            # Keep latest publish-time version of each interval (multiple documents overlap)
+            df = df.sort_values("Publish Time").groupby("Interval Start", as_index=False).last()
+            df[gen_col]       = pd.to_numeric(df[gen_col],       errors="coerce").fillna(0)
+            df[potential_col] = pd.to_numeric(df[potential_col], errors="coerce").fillna(0)
+            return float((df[potential_col] - df[gen_col]).clip(lower=0).sum())
+        except Exception:
+            continue
+    return 0.0
+
+
+def fetch_ercot(target: date) -> CurtailmentRow | None:
+    try:
+        import gridstatus
+
+        ercot = gridstatus.Ercot()
+        wind_mwh  = _ercot_day_curtailment(
+            ercot.get_wind_actual_and_forecast_hourly,
+            target, "GEN SYSTEM WIDE", "WGRPP SYSTEM WIDE",
+        )
+        solar_mwh = _ercot_day_curtailment(
+            ercot.get_solar_actual_and_forecast_hourly,
+            target, "GEN SYSTEM WIDE", "PVGRPP SYSTEM WIDE",
+        )
+
+        if wind_mwh == 0 and solar_mwh == 0:
+            return None
+
+        return CurtailmentRow(
+            iso="ERCOT",
+            date=target,
+            solar_mwh=round(solar_mwh, 2),
+            wind_mwh=round(wind_mwh, 2),
+            total_mwh=round(solar_mwh + wind_mwh, 2),
+        )
+    except Exception as exc:
+        print(f"[ERCOT] failed: {exc}")
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -118,18 +226,18 @@ def upsert(conn, row: CurtailmentRow) -> None:
 # ---------------------------------------------------------------------------
 
 FETCHERS = {
-    "CAISO": fetch_caiso,
-    # "ERCOT": fetch_ercot,  # not yet available via gridstatus
+    "CAISO":  fetch_caiso,
+    "SPP":    fetch_spp,
+    "ERCOT":  fetch_ercot,
+    # MISO / PJM / NYISO / ISONE: no curtailment methods in gridstatus
 }
 
 
 def dates_to_fetch() -> list[date]:
     if FETCH_DATE:
         return [date.fromisoformat(FETCH_DATE)]
-
-    today = date.today()
+    today     = date.today()
     yesterday = today - timedelta(days=1)
-
     return [yesterday - timedelta(days=i) for i in range(BACKFILL_DAYS)]
 
 
@@ -151,6 +259,7 @@ def main() -> None:
 
     targets = dates_to_fetch()
     print(f"Fetching curtailment for {len(targets)} date(s): {targets[0]} → {targets[-1]}")
+    print(f"ISOs: {list(FETCHERS.keys())}")
 
     errors = 0
     for iso, fetcher in FETCHERS.items():
@@ -166,12 +275,17 @@ def main() -> None:
                     print(f"[{iso}] {target} → no data returned")
                     continue
                 upsert(conn, row)
-                print(f"[{iso}] {target} → solar={row['solar_mwh']} MWh  wind={row['wind_mwh']} MWh  total={row['total_mwh']} MWh")
+                print(
+                    f"[{iso}] {target} → "
+                    f"solar={row['solar_mwh']:,.0f} MWh  "
+                    f"wind={row['wind_mwh']:,.0f} MWh  "
+                    f"total={row['total_mwh']:,.0f} MWh"
+                )
             except Exception:
                 traceback.print_exc()
                 errors += 1
 
-            time.sleep(1)  # polite rate limiting
+            time.sleep(1.5)  # polite rate limiting
 
     conn.close()
 

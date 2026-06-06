@@ -1,24 +1,10 @@
+import Image from "next/image";
 import { fetchHistory, fetchSummaries } from "@/lib/db";
 import CurtailmentChart from "@/components/CurtailmentChart";
+import CurtailmentHero from "@/components/CurtailmentHero";
+import FadeUp from "@/components/FadeUp";
 
-export const revalidate = 3600; // ISR — rebuild page every hour
-
-const ISO_META: Record<string, { label: string; color: string; dot: string; badge: string; region: string }> = {
-  CAISO: {
-    label: "CAISO",
-    color: "#f59e0b",
-    dot: "bg-amber-400",
-    badge: "bg-amber-500/10 text-amber-400 ring-amber-500/20",
-    region: "California",
-  },
-  ERCOT: {
-    label: "ERCOT",
-    color: "#60a5fa",
-    dot: "bg-blue-400",
-    badge: "bg-blue-500/10 text-blue-400 ring-blue-500/20",
-    region: "Texas",
-  },
-};
+export const revalidate = 3600;
 
 function fmtGwh(mwh: number) {
   const gwh = mwh / 1000;
@@ -28,245 +14,313 @@ function fmtGwh(mwh: number) {
 function fmtDate(dateStr: string) {
   if (!dateStr) return "—";
   return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+    month: "short", day: "numeric", year: "numeric",
   });
 }
 
+const MONO = "var(--font-jetbrains-mono, monospace)";
+
+const ISO_META: Record<string, {
+  label: string;
+  region: string;
+  accent: string;
+  accentRgb: string;
+  source: string;
+}> = {
+  CAISO: {
+    label: "CAISO", region: "California",
+    accent: "#fb7185", accentRgb: "251,113,133",
+    source: "CAISO · gridstatus",
+  },
+  SPP: {
+    label: "SPP", region: "Southwest Power Pool",
+    accent: "#34d399", accentRgb: "52,211,153",
+    source: "SPP · gridstatus",
+  },
+  ERCOT: {
+    label: "ERCOT", region: "Texas",
+    accent: "#38bdf8", accentRgb: "56,189,248",
+    source: "ERCOT · est. via gridstatus",
+  },
+};
+
 export default async function HomePage() {
-  const [summaries, caisoHistory, ercotHistory] = await Promise.all([
+  const [summaries, caisoHistory, sppHistory, ercotHistory] = await Promise.all([
     fetchSummaries(),
     fetchHistory("CAISO", 90),
+    fetchHistory("SPP",   90),
     fetchHistory("ERCOT", 90),
   ]);
 
-  const historyByISO: Record<string, typeof caisoHistory> = {
+  const historyByIso: Record<string, typeof caisoHistory> = {
     CAISO: caisoHistory,
+    SPP:   sppHistory,
     ERCOT: ercotHistory,
   };
 
+  const caiso = summaries.find((s) => s.iso === "CAISO");
   const totalSolar30d = summaries.reduce((a, s) => a + s.solar_mwh_30d, 0);
-  const totalWind30d = summaries.reduce((a, s) => a + s.wind_mwh_30d, 0);
-  const totalAll30d = summaries.reduce((a, s) => a + s.total_mwh_30d, 0);
-
+  const totalWind30d  = summaries.reduce((a, s) => a + s.wind_mwh_30d,  0);
+  const totalAll30d   = summaries.reduce((a, s) => a + s.total_mwh_30d, 0);
   const hasData = summaries.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white">
-      {/* Nav */}
-      <header className="border-b border-white/[0.06] px-4 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <a href="https://kardashevlabs.org" className="text-sm font-semibold text-white tracking-tight">
-            Kardashev<span className="text-amber-400">Labs</span>
-          </a>
-          <nav className="flex items-center gap-4 text-xs text-white/40">
-            <a href="https://interconnection-queue.kardashevlabs.org" className="hover:text-white/70 transition-colors">Queue Tracker</a>
-            <a href="https://grid-demand.kardashevlabs.org" className="hover:text-white/70 transition-colors">Grid Demand</a>
-            <a href="https://github.com/kardashev-lab" target="_blank" rel="noopener noreferrer" className="hover:text-white/70 transition-colors">GitHub</a>
-          </nav>
-        </div>
-      </header>
+    <div style={{ minHeight: "100vh", color: "#fff", overflowX: "hidden", background: "#050f0b" }}>
 
-      <main className="max-w-6xl mx-auto px-4 py-12 lg:py-20">
-        {/* Hero */}
-        <div className="mb-12">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] uppercase tracking-[0.18em] font-medium bg-white/5 ring-1 ring-white/10 text-white/40 mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Daily refresh · Open source
-          </span>
-          <h1 className="text-3xl lg:text-5xl font-bold tracking-tight leading-[1.08] mb-4">
-            US Curtailment Tracker
-          </h1>
-          <p className="text-white/40 text-[1rem] max-w-xl leading-relaxed">
-            How much solar and wind energy is being thrown away every day — by ISO.
-            Curtailment signals where the grid is congested and where storage is needed.
-          </p>
-        </div>
+      {/* Ambient orbs */}
+      <div aria-hidden style={{ pointerEvents: "none", position: "fixed", inset: 0, zIndex: 0, overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: "-5%", left: "-5%",
+          width: 900, height: 900, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(251,113,133,0.08) 0%, transparent 60%)",
+          filter: "blur(130px)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-10%", right: "-5%",
+          width: 700, height: 700, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 60%)",
+          filter: "blur(130px)",
+        }} />
+      </div>
 
-        {/* 30-day aggregate stats */}
-        {hasData && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-10">
-            {[
-              { label: "Solar curtailed (30d)", value: fmtGwh(totalSolar30d), color: "text-amber-400" },
-              { label: "Wind curtailed (30d)",  value: fmtGwh(totalWind30d),  color: "text-blue-400" },
-              { label: "Total curtailed (30d)", value: fmtGwh(totalAll30d),   color: "text-white" },
-              { label: "ISOs tracked",          value: summaries.length.toString(), color: "text-emerald-400" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="p-px rounded-2xl bg-gradient-to-br from-white/8 to-white/[0.02]"
-              >
-                <div className="rounded-[calc(1rem-1px)] bg-white/[0.02] p-4 lg:p-5">
-                  <div className={`font-mono text-2xl font-semibold mb-1 ${stat.color}`}>
-                    {stat.value}
-                  </div>
-                  <div className="text-[11px] text-white/30 uppercase tracking-wider">
-                    {stat.label}
-                  </div>
+      {/* ── Hero (full-bleed photo) ── */}
+      <FadeUp delay={0}>
+        <CurtailmentHero>
+          <div style={{ maxWidth: 1152, margin: "0 auto", padding: "160px 24px 72px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 28,
+              padding: "6px 14px", borderRadius: 999, fontSize: 10,
+              textTransform: "uppercase", letterSpacing: "0.22em", fontWeight: 500,
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(52,211,153,0.12)",
+              color: "rgba(255,255,255,0.4)",
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fb7185", display: "inline-block" }} className="animate-pulse-slow" />
+              Live · Updated daily · Open source
+            </span>
+
+            {caiso ? (
+              <>
+                <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 20, maxWidth: 720 }}>
+                  <span style={{ color: "#fb7185" }}>{fmtGwh(caiso.total_mwh_today)}</span>
+                  {" "}of clean energy wasted yesterday in California
+                </h1>
+                <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.35)", maxWidth: 460, marginBottom: 32 }}>
+                  The duck curve problem made visible. {fmtDate(caiso.latest_date)} · {summaries.length} ISO{summaries.length !== 1 ? "s" : ""} tracked.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
+                  {[
+                    { value: fmtGwh(totalSolar30d), label: "Solar · 30d",  color: "#fb7185" },
+                    { value: fmtGwh(totalWind30d),  label: "Wind · 30d",   color: "#34d399" },
+                    { value: fmtGwh(totalAll30d),   label: "Total · 30d",  color: "rgba(255,255,255,0.7)" },
+                    { value: `${summaries.length}`, label: "ISOs tracked", color: "rgba(255,255,255,0.5)" },
+                  ].map((s) => (
+                    <div key={s.label} style={{ padding: "8px 16px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(52,211,153,0.1)" }}>
+                      <span style={{ fontFamily: MONO, fontWeight: 600, fontSize: "0.85rem", color: s.color }}>{s.value}</span>
+                      <span style={{ marginLeft: 8, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.28)" }}>{s.label}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
+              </>
+            ) : (
+              <>
+                <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 20, maxWidth: 720 }}>
+                  US Curtailment <span style={{ color: "#fb7185" }}>Tracker</span>
+                </h1>
+                <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.35)", maxWidth: 460 }}>
+                  How much solar and wind is thrown away every day — by ISO.
+                  Curtailment signals where the grid is congested and where storage is needed.
+                </p>
+              </>
+            )}
           </div>
-        )}
+        </CurtailmentHero>
+      </FadeUp>
 
-        {/* ISO cards */}
+      <div style={{ position: "relative", zIndex: 10, maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+
+        {/* ── ISO cards ── */}
         {hasData ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {summaries.map((s) => {
-              const meta = ISO_META[s.iso] ?? {
-                label: s.iso,
-                color: "#94a3b8",
-                dot: "bg-slate-400",
-                badge: "bg-slate-500/10 text-slate-400 ring-slate-500/20",
-                region: "",
-              };
-              const history = historyByISO[s.iso] ?? [];
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {summaries.map((s, i) => {
+              const meta    = ISO_META[s.iso] ?? { label: s.iso, region: "", accent: "#94a3b8", accentRgb: "148,163,184", source: s.iso };
+              const history = historyByIso[s.iso] ?? [];
 
               return (
-                <div
-                  key={s.iso}
-                  className="p-px rounded-[2rem] bg-gradient-to-br from-white/10 via-white/5 to-white/[0.02]"
-                >
-                  <div className="h-full rounded-[calc(2rem-1px)] bg-white/[0.025] p-6 lg:p-8">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] uppercase tracking-[0.15em] font-medium ring-1 ${meta.badge}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${meta.dot} animate-pulse`} />
+                <FadeUp key={s.iso} delay={0.08 + i * 0.06}>
+                  <div style={{ borderRadius: 28, border: `1px solid rgba(${meta.accentRgb},0.14)`, background: "#0b1812", overflow: "hidden" }}>
+                    {/* Top bar */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 32px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "5px 12px", borderRadius: 999,
+                          fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", fontWeight: 600,
+                          background: `rgba(${meta.accentRgb},0.1)`,
+                          color: meta.accent,
+                          border: `1px solid rgba(${meta.accentRgb},0.22)`,
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: meta.accent }} className="animate-pulse-slow" />
                           {meta.label}
                         </span>
                         {meta.region && (
-                          <span className="text-[11px] text-white/25 font-mono">{meta.region}</span>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.28)", fontFamily: MONO }}>{meta.region}</span>
                         )}
                       </div>
-                      <span className="text-[11px] text-white/20 font-mono">
-                        {fmtDate(s.latest_date)}
-                      </span>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>{fmtDate(s.latest_date)}</span>
                     </div>
 
-                    {/* Latest day stats */}
-                    <div className="grid grid-cols-3 gap-4 mb-6 pb-6 border-b border-white/[0.06]">
-                      <div>
-                        <div className="text-amber-400 font-mono text-lg font-semibold">
-                          {fmtGwh(s.solar_mwh_today)}
+                    {/* Body */}
+                    <div style={{ display: "flex" }}>
+                      {/* Stats */}
+                      <div style={{ width: 220, flexShrink: 0, padding: "22px 20px 22px 28px", display: "flex", flexDirection: "column", gap: 10, borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(251,113,133,0.07)", border: "1px solid rgba(251,113,133,0.14)" }}>
+                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(251,113,133,0.55)", marginBottom: 8 }}>Solar curtailed</div>
+                          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fb7185", fontFamily: MONO }}>{fmtGwh(s.solar_mwh_today)}</div>
                         </div>
-                        <div className="text-[11px] text-white/30 uppercase tracking-wider mt-0.5">
-                          Solar
+                        <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.13)" }}>
+                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(52,211,153,0.55)", marginBottom: 8 }}>Wind curtailed</div>
+                          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#34d399", fontFamily: MONO }}>{fmtGwh(s.wind_mwh_today)}</div>
                         </div>
-                      </div>
-                      <div>
-                        <div className="text-blue-400 font-mono text-lg font-semibold">
-                          {fmtGwh(s.wind_mwh_today)}
-                        </div>
-                        <div className="text-[11px] text-white/30 uppercase tracking-wider mt-0.5">
-                          Wind
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-white font-mono text-lg font-semibold">
-                          {fmtGwh(s.total_mwh_today)}
-                        </div>
-                        <div className="text-[11px] text-white/30 uppercase tracking-wider mt-0.5">
-                          Total
+                        <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", gap: 5 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                            <span style={{ color: "rgba(255,255,255,0.28)" }}>Solar · 30d</span>
+                            <span style={{ fontFamily: MONO, color: "rgba(251,113,133,0.6)" }}>{fmtGwh(s.solar_mwh_30d)}</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                            <span style={{ color: "rgba(255,255,255,0.28)" }}>Wind · 30d</span>
+                            <span style={{ fontFamily: MONO, color: "rgba(52,211,153,0.6)" }}>{fmtGwh(s.wind_mwh_30d)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* 30d summary */}
-                    <div className="mb-6">
-                      <div className="text-[11px] text-white/25 uppercase tracking-widest mb-3">
-                        Last 30 days
-                      </div>
-                      <div className="flex gap-6">
-                        <div>
-                          <span className="text-sm font-mono text-white/60">{fmtGwh(s.solar_mwh_30d)}</span>
-                          <span className="text-[11px] text-white/25 ml-1.5">solar</span>
+                      {/* Chart */}
+                      <div style={{ flex: 1, padding: "20px 28px 16px 20px", minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.2)" }}>90-day trend</span>
+                          <div style={{ display: "flex", gap: 14, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                              <span style={{ display: "inline-block", width: 12, height: 1, background: "#fb7185" }} />Solar
+                            </span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                              <span style={{ display: "inline-block", width: 12, height: 1, background: "#34d399" }} />Wind
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-sm font-mono text-white/60">{fmtGwh(s.wind_mwh_30d)}</span>
-                          <span className="text-[11px] text-white/25 ml-1.5">wind</span>
+                        <CurtailmentChart data={history} />
+                        <div style={{ marginTop: 10, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.13)", fontFamily: MONO }}>
+                          {meta.source}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Chart */}
-                    <div className="mb-4">
-                      <div className="text-[11px] text-white/25 uppercase tracking-widest mb-3 flex items-center gap-4">
-                        <span>90-day trend</span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-px bg-amber-400" />
-                          <span>Solar</span>
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-px bg-blue-400" />
-                          <span>Wind</span>
-                        </span>
-                      </div>
-                      <CurtailmentChart data={history} iso={s.iso} />
-                    </div>
-
-                    {/* Source */}
-                    <div className="text-[11px] text-white/18 font-mono">
-                      Source:{" "}
-                      {s.iso === "CAISO"
-                        ? "CAISO OASIS ENE_SLRS · gridstatus"
-                        : `${s.iso} market reports · gridstatus`}
                     </div>
                   </div>
-                </div>
+                </FadeUp>
               );
             })}
           </div>
         ) : (
-          /* Empty state — before first fetch runs */
-          <div className="p-px rounded-[2rem] bg-gradient-to-br from-white/10 via-white/5 to-white/[0.02]">
-            <div className="rounded-[calc(2rem-1px)] bg-white/[0.025] p-10 lg:p-16 text-center">
-              <div className="text-white/20 text-sm mb-2">No data yet</div>
-              <p className="text-white/30 text-xs max-w-sm mx-auto">
-                The fetcher runs daily at 08:00 UTC. Run{" "}
-                <code className="font-mono bg-white/5 px-1.5 py-0.5 rounded text-white/50">
-                  python services/fetcher/fetch.py
-                </code>{" "}
-                locally with <code className="font-mono bg-white/5 px-1.5 py-0.5 rounded text-white/50">DATABASE_URL</code> set to seed the database.
+          <FadeUp delay={0.1}>
+            <div style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(52,211,153,0.12)", background: "#0b1812" }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>No data yet — fetcher runs daily at 08:00 UTC</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", lineHeight: 1.7 }}>
+                Set <code style={{ fontFamily: MONO, background: "rgba(255,255,255,0.07)", padding: "2px 6px", borderRadius: 4, color: "rgba(255,255,255,0.4)" }}>DATABASE_URL</code>
+                {" "}and run <code style={{ fontFamily: MONO, background: "rgba(255,255,255,0.07)", padding: "2px 6px", borderRadius: 4, color: "rgba(255,255,255,0.4)" }}>python services/fetcher/fetch.py</code>
               </p>
             </div>
-          </div>
+          </FadeUp>
         )}
 
-        {/* Explainer */}
-        <div className="mt-10 p-px rounded-2xl bg-gradient-to-br from-white/8 to-white/[0.02]">
-          <div className="rounded-[calc(1rem-1px)] bg-white/[0.01] p-6 lg:p-8">
-            <h2 className="text-sm font-semibold text-white mb-3">What is curtailment?</h2>
-            <p className="text-[0.82rem] text-white/35 leading-relaxed max-w-3xl">
-              Curtailment is when grid operators instruct solar or wind generators to produce less
-              power than they could — usually because there&apos;s more electricity than the grid can
-              absorb at that moment. It&apos;s wasted clean energy. High curtailment signals congested
-              transmission, insufficient storage, or poor timing between generation and demand.
-              CAISO (California) consistently leads the US in solar curtailment — the &ldquo;duck
-              curve&rdquo; problem made visible.
-            </p>
+        {/* ── Bottom row ── */}
+        <FadeUp delay={0.2}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, paddingTop: 16, paddingBottom: 100, alignItems: "start" }}>
+            <div style={{ borderRadius: 24, border: "1px solid rgba(52,211,153,0.1)", background: "#0b1812", overflow: "hidden" }}>
+              <div style={{ background: "#050f0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <Image
+                  src="/images/og-duck-curve.png"
+                  alt="The duck curve — midday solar dips net load, evening demand peaks"
+                  width={1200}
+                  height={630}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  style={{ width: "100%", height: "auto", display: "block" }}
+                />
+              </div>
+              <div style={{ padding: "24px 28px 28px" }}>
+                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.28)", marginBottom: 16 }}>What is curtailment?</h2>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.42)" }}>
+                  When the grid can&apos;t absorb all available solar and wind, operators instruct generators
+                  to produce less — even when the sun is shining. High curtailment signals congested
+                  transmission, insufficient storage, or poor demand timing.
+                </p>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.28)", marginTop: 12 }}>
+                  CAISO leads in solar curtailment (the{" "}
+                  <a
+                    href="https://en.wikipedia.org/wiki/Duck_curve"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "rgba(251,113,133,0.85)", textDecoration: "underline", textDecorationColor: "rgba(251,113,133,0.35)", textUnderlineOffset: "3px" }}
+                  >
+                    duck curve
+                  </a>
+                  ). SPP leads in wind curtailment across the Great Plains.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ borderRadius: 24, border: "1px solid rgba(52,211,153,0.1)", background: "#0b1812", overflow: "hidden" }}>
+              <div style={{ background: "#050f0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <Image
+                  src="/images/hero-wind-curtailment.jpg"
+                  alt="Wind turbines on the Great Plains at dusk"
+                  width={1200}
+                  height={630}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  style={{ width: "100%", height: "auto", display: "block" }}
+                />
+              </div>
+              <div style={{ padding: "24px 28px 28px" }}>
+                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.28)", marginBottom: 12 }}>Open source</h2>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.38)", marginBottom: 20 }}>
+                  Python fetcher · PostgreSQL · Next.js. 2 ISOs live. Fork it, add yours.
+                </p>
+                <a
+                  href="https://github.com/kardashev-lab/curtailment-tracker"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "12px 16px", borderRadius: 999, textDecoration: "none", fontSize: "0.875rem", fontWeight: 600, color: "rgba(255,255,255,0.75)", background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.18)", marginBottom: 16 }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: 0.6 }}>
+                      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                    </svg>
+                    View on GitHub
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "rgba(52,211,153,0.12)", fontSize: 12 }}>↗</span>
+                </a>
+                <div style={{ display: "flex", gap: 8, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  {[
+                    { label: "Queue Tracker", href: "https://interconnection-queue.kardashevlabs.org" },
+                    { label: "Grid Demand",   href: "https://grid-demand.kardashevlabs.org" },
+                  ].map((t) => (
+                    <a key={t.label} href={t.href} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", padding: "8px 12px", borderRadius: 12, fontSize: 11, fontWeight: 500, textDecoration: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.38)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      {t.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
+        </FadeUp>
+      </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-4 py-8 mt-16">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[12px] text-white/18 font-mono">
-            © {new Date().getFullYear()} Kardashev Labs · Open source ·{" "}
-            <a
-              href="https://github.com/kardashev-lab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white/40 transition-colors"
-            >
-              github.com/kardashev-lab
-            </a>
+      <footer style={{ position: "relative", zIndex: 10, padding: "0 24px 40px" }}>
+        <div style={{ maxWidth: 1152, margin: "0 auto", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: MONO }}>
+            © {new Date().getFullYear()}{" "}
+            <a href="https://kardashevlabs.org" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>Kardashev Labs</a>
+            {" · "}Data via gridstatus ·{" "}
+            <a href="https://github.com/kardashev-lab" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>github.com/kardashev-lab</a>
           </p>
-          <p className="text-[12px] text-white/18 font-mono">curtailment.kardashevlabs.org</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", fontFamily: MONO }}>curtailment.kardashevlabs.org</p>
         </div>
       </footer>
     </div>

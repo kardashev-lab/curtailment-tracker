@@ -11,92 +11,129 @@ import {
 } from "recharts";
 import type { DailyRow } from "@/lib/db";
 
-type Props = { data: DailyRow[]; iso: string };
+type Props = { data: DailyRow[] };
 
-function fmt(n: number) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toFixed(0);
+function fmtGwh(mwh: number) {
+  const gwh = mwh / 1000;
+  return gwh >= 1 ? `${gwh.toFixed(1)} GWh` : `${Math.round(mwh)} MWh`;
 }
 
-export default function CurtailmentChart({ data, iso }: Props) {
+function CustomTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      style={{
+        background: "rgba(5,15,11,0.95)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 12,
+        padding: "10px 14px",
+        fontSize: 12,
+        backdropFilter: "blur(16px)",
+      }}
+    >
+      <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 6, fontSize: 11, letterSpacing: "0.08em" }}>
+        {label}
+      </p>
+      {payload.map((p) => (
+        <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
+          <span style={{ color: "rgba(255,255,255,0.55)", minWidth: 36 }}>{p.name}</span>
+          <span style={{ color: "#fff", fontFamily: "var(--font-jetbrains-mono, monospace)", fontWeight: 500 }}>
+            {fmtGwh(p.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function CurtailmentChart({ data }: Props) {
   if (!data.length) {
     return (
-      <div className="flex items-center justify-center h-48 text-white/20 text-sm">
-        No data yet — fetcher runs daily at 08:00 UTC.
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: 240,
+          color: "rgba(255,255,255,0.15)",
+          fontSize: 13,
+        }}
+      >
+        No data yet — fetcher runs daily at 08:00 UTC
       </div>
     );
   }
 
   const chartData = data.map((d) => ({
-    date: d.date.slice(5),        // "MM-DD"
-    solar: Math.round(d.solar_mwh),
-    wind: Math.round(d.wind_mwh),
-    total: Math.round(d.total_mwh),
+    date: d.date.slice(5),
+    Solar: Math.round(d.solar_mwh),
+    Wind: Math.round(d.wind_mwh),
   }));
 
   const hasSolar = data.some((d) => d.solar_mwh > 0);
-  const hasWind = data.some((d) => d.wind_mwh > 0);
+  const hasWind  = data.some((d) => d.wind_mwh > 0);
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={240}>
+      <AreaChart data={chartData} margin={{ top: 4, right: 2, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="solarGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
-            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+            <stop offset="0%"   stopColor="#fb7185" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="#fb7185" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="windGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.25} />
-            <stop offset="95%" stopColor="#60a5fa" stopOpacity={0} />
+            <stop offset="0%"   stopColor="#34d399" stopOpacity={0.25} />
+            <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+
+        <CartesianGrid
+          strokeDasharray="2 6"
+          stroke="rgba(255,255,255,0.04)"
+          vertical={false}
+        />
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.25)" }}
+          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)", fontFamily: "var(--font-jetbrains-mono, monospace)" }}
           axisLine={false}
           tickLine={false}
           interval="preserveStartEnd"
+          tickMargin={8}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.25)" }}
+          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)", fontFamily: "var(--font-jetbrains-mono, monospace)" }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={fmt}
-          width={38}
+          tickFormatter={(v) => fmtGwh(v)}
+          width={46}
         />
-        <Tooltip
-          contentStyle={{
-            background: "#0f172a",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 8,
-            fontSize: 12,
-          }}
-          labelStyle={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}
-          formatter={(value: number, name: string) => [
-            `${value.toLocaleString()} MWh`,
-            name.charAt(0).toUpperCase() + name.slice(1),
-          ]}
-        />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.06)", strokeWidth: 1 }} />
+
         {hasSolar && (
           <Area
             type="monotone"
-            dataKey="solar"
-            stroke="#f59e0b"
+            dataKey="Solar"
+            stroke="#fb7185"
             strokeWidth={1.5}
             fill="url(#solarGrad)"
             dot={false}
-            activeDot={{ r: 3, fill: "#f59e0b" }}
+            activeDot={{ r: 3, fill: "#fb7185", strokeWidth: 0 }}
           />
         )}
         {hasWind && (
           <Area
             type="monotone"
-            dataKey="wind"
-            stroke="#60a5fa"
+            dataKey="Wind"
+            stroke="#34d399"
             strokeWidth={1.5}
             fill="url(#windGrad)"
             dot={false}
-            activeDot={{ r: 3, fill: "#60a5fa" }}
+            activeDot={{ r: 3, fill: "#34d399", strokeWidth: 0 }}
           />
         )}
       </AreaChart>
