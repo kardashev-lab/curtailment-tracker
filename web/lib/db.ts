@@ -61,19 +61,39 @@ export async function fetchSummaries(): Promise<ISOSummary[]> {
 
   try {
     const { rows } = await db.query<ISOSummary>(`
+      WITH latest AS (
+        SELECT DISTINCT ON (iso)
+          iso, date,
+          solar_mwh AS solar_mwh_today,
+          wind_mwh  AS wind_mwh_today,
+          total_mwh AS total_mwh_today
+        FROM curtailment_daily
+        ORDER BY iso, date DESC
+      ),
+      rolling AS (
+        SELECT
+          iso,
+          COALESCE(SUM(total_mwh), 0)::float AS total_mwh_30d,
+          COALESCE(SUM(solar_mwh), 0)::float AS solar_mwh_30d,
+          COALESCE(SUM(wind_mwh),  0)::float AS wind_mwh_30d,
+          COUNT(*)::int                       AS days_with_data
+        FROM curtailment_daily
+        WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY iso
+      )
       SELECT
-        iso,
-        TO_CHAR(MAX(date), 'YYYY-MM-DD')                                         AS latest_date,
-        COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN solar_mwh END), 0)::float AS solar_mwh_today,
-        COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN wind_mwh  END), 0)::float AS wind_mwh_today,
-        COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN total_mwh END), 0)::float AS total_mwh_today,
-        COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN total_mwh END), 0)::float AS total_mwh_30d,
-        COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN solar_mwh END), 0)::float AS solar_mwh_30d,
-        COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN wind_mwh  END), 0)::float AS wind_mwh_30d,
-        COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END)::int                     AS days_with_data
-      FROM curtailment_daily
-      GROUP BY iso
-      ORDER BY iso
+        l.iso,
+        TO_CHAR(l.date, 'YYYY-MM-DD')          AS latest_date,
+        COALESCE(l.solar_mwh_today, 0)::float  AS solar_mwh_today,
+        COALESCE(l.wind_mwh_today,  0)::float  AS wind_mwh_today,
+        COALESCE(l.total_mwh_today, 0)::float  AS total_mwh_today,
+        COALESCE(r.total_mwh_30d,   0)::float  AS total_mwh_30d,
+        COALESCE(r.solar_mwh_30d,   0)::float  AS solar_mwh_30d,
+        COALESCE(r.wind_mwh_30d,    0)::float  AS wind_mwh_30d,
+        COALESCE(r.days_with_data,  0)::int    AS days_with_data
+      FROM latest l
+      LEFT JOIN rolling r USING (iso)
+      ORDER BY l.iso
     `);
     return rows;
   } catch (err) {
