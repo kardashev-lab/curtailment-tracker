@@ -35,49 +35,64 @@ export async function fetchHistory(iso: string, days = 90): Promise<DailyRow[]> 
   const db = getPool();
   if (!db) return [];
 
-  const { rows } = await db.query<DailyRow>(
-    `SELECT iso,
-            TO_CHAR(date, 'YYYY-MM-DD') AS date,
-            COALESCE(solar_mwh, 0)::float AS solar_mwh,
-            COALESCE(wind_mwh, 0)::float  AS wind_mwh,
-            COALESCE(total_mwh, 0)::float AS total_mwh
-     FROM curtailment_daily
-     WHERE iso = $1
-       AND date >= CURRENT_DATE - ($2 || ' days')::interval
-     ORDER BY date ASC`,
-    [iso, days]
-  );
-  return rows;
+  try {
+    const { rows } = await db.query<DailyRow>(
+      `SELECT iso,
+              TO_CHAR(date, 'YYYY-MM-DD') AS date,
+              COALESCE(solar_mwh, 0)::float AS solar_mwh,
+              COALESCE(wind_mwh, 0)::float  AS wind_mwh,
+              COALESCE(total_mwh, 0)::float AS total_mwh
+       FROM curtailment_daily
+       WHERE iso = $1
+         AND date >= CURRENT_DATE - ($2 || ' days')::interval
+       ORDER BY date ASC`,
+      [iso, days]
+    );
+    return rows;
+  } catch (err) {
+    console.error("fetchHistory error:", (err as Error).message);
+    return [];
+  }
 }
 
 export async function fetchSummaries(): Promise<ISOSummary[]> {
   const db = getPool();
   if (!db) return [];
 
-  const { rows } = await db.query<ISOSummary>(`
-    SELECT
-      iso,
-      TO_CHAR(MAX(date), 'YYYY-MM-DD')                                         AS latest_date,
-      COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN solar_mwh END), 0)::float AS solar_mwh_today,
-      COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN wind_mwh  END), 0)::float AS wind_mwh_today,
-      COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN total_mwh END), 0)::float AS total_mwh_today,
-      COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN total_mwh END), 0)::float AS total_mwh_30d,
-      COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN solar_mwh END), 0)::float AS solar_mwh_30d,
-      COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN wind_mwh  END), 0)::float AS wind_mwh_30d,
-      COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END)::int                     AS days_with_data
-    FROM curtailment_daily
-    GROUP BY iso
-    ORDER BY iso
-  `);
-  return rows;
+  try {
+    const { rows } = await db.query<ISOSummary>(`
+      SELECT
+        iso,
+        TO_CHAR(MAX(date), 'YYYY-MM-DD')                                         AS latest_date,
+        COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN solar_mwh END), 0)::float AS solar_mwh_today,
+        COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN wind_mwh  END), 0)::float AS wind_mwh_today,
+        COALESCE(MAX(CASE WHEN date = MAX(date) OVER (PARTITION BY iso) THEN total_mwh END), 0)::float AS total_mwh_today,
+        COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN total_mwh END), 0)::float AS total_mwh_30d,
+        COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN solar_mwh END), 0)::float AS solar_mwh_30d,
+        COALESCE(SUM(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN wind_mwh  END), 0)::float AS wind_mwh_30d,
+        COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END)::int                     AS days_with_data
+      FROM curtailment_daily
+      GROUP BY iso
+      ORDER BY iso
+    `);
+    return rows;
+  } catch (err) {
+    console.error("fetchSummaries error:", (err as Error).message);
+    return [];
+  }
 }
 
 export async function fetchAvailableISOs(): Promise<string[]> {
   const db = getPool();
   if (!db) return [];
 
-  const { rows } = await db.query<{ iso: string }>(
-    "SELECT DISTINCT iso FROM curtailment_daily ORDER BY iso"
-  );
-  return rows.map((r) => r.iso);
+  try {
+    const { rows } = await db.query<{ iso: string }>(
+      "SELECT DISTINCT iso FROM curtailment_daily ORDER BY iso"
+    );
+    return rows.map((r) => r.iso);
+  } catch (err) {
+    console.error("fetchAvailableISOs error:", (err as Error).message);
+    return [];
+  }
 }
