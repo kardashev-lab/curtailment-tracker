@@ -1,8 +1,9 @@
-import pg from "pg";
+const API_BASE = process.env.KARDASHEV_API_URL ?? "https://data.kardashevlabs.org";
+const REVALIDATE = 3600;
 
 export type DailyRow = {
   iso: string;
-  date: string;        // YYYY-MM-DD
+  date: string;
   solar_mwh: number;
   wind_mwh: number;
   total_mwh: number;
@@ -20,99 +21,66 @@ export type ISOSummary = {
   days_with_data: number;
 };
 
-let pool: pg.Pool | null = null;
-
-function getPool(): pg.Pool | null {
-  if (!process.env.DATABASE_URL) return null;
-  if (!pool) {
-    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
-    pool.on("error", (err) => console.error("pg pool error:", err.message));
+async function apiFetch<T>(path: string): Promise<T | null> {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      next: { revalidate: REVALIDATE },
+    });
+    if (!res.ok) return null;
+    return res.json() as Promise<T>;
+  } catch (err) {
+    console.error("kardashev API error:", (err as Error).message);
+    return null;
   }
-  return pool;
 }
 
 export async function fetchHistory(iso: string, days = 90): Promise<DailyRow[]> {
-  const db = getPool();
-  if (!db) return [];
-
-  try {
-    const { rows } = await db.query<DailyRow>(
-      `SELECT iso,
-              TO_CHAR(date, 'YYYY-MM-DD') AS date,
-              COALESCE(solar_mwh, 0)::float AS solar_mwh,
-              COALESCE(wind_mwh, 0)::float  AS wind_mwh,
-              COALESCE(total_mwh, 0)::float AS total_mwh
-       FROM curtailment_daily
-       WHERE iso = $1
-         AND date >= CURRENT_DATE - ($2 || ' days')::interval
-       ORDER BY date ASC`,
-      [iso, days]
-    );
-    return rows;
-  } catch (err) {
-    console.error("fetchHistory error:", (err as Error).message);
-    return [];
-  }
+  const data = await apiFetch<DailyRow[]>(`/curtailment?iso=${iso}&days=${days}`);
+  if (!data) return [];
+  return [...data].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export async function fetchSummaries(): Promise<ISOSummary[]> {
-  const db = getPool();
-  if (!db) return [];
+  const [summary, history] = await Promise.all([
+    apiFetch<Array<{
+      iso: string;
+      latest_date: string;
+      solar_30d_mwh: number;
+      wind_30d_mwh: number;
+      total_30d_mwh: number;
+    }>>("/curtailment/summary"),
+    apiFetch<DailyRow[]>("/curtailment?days=90"),
+  ]);
 
-  try {
-    const { rows } = await db.query<ISOSummary>(`
-      WITH latest AS (
-        SELECT DISTINCT ON (iso)
-          iso, date,
-          solar_mwh AS solar_mwh_today,
-          wind_mwh  AS wind_mwh_today,
-          total_mwh AS total_mwh_today
-        FROM curtailment_daily
-        ORDER BY iso, date DESC
-      ),
-      rolling AS (
-        SELECT
-          iso,
-          COALESCE(SUM(total_mwh), 0)::float AS total_mwh_30d,
-          COALESCE(SUM(solar_mwh), 0)::float AS solar_mwh_30d,
-          COALESCE(SUM(wind_mwh),  0)::float AS wind_mwh_30d,
-          COUNT(*)::int                       AS days_with_data
-        FROM curtailment_daily
-        WHERE date >= CURRENT_DATE - INTERVAL '30 days'
-        GROUP BY iso
-      )
-      SELECT
-        l.iso,
-        TO_CHAR(l.date, 'YYYY-MM-DD')          AS latest_date,
-        COALESCE(l.solar_mwh_today, 0)::float  AS solar_mwh_today,
-        COALESCE(l.wind_mwh_today,  0)::float  AS wind_mwh_today,
-        COALESCE(l.total_mwh_today, 0)::float  AS total_mwh_today,
-        COALESCE(r.total_mwh_30d,   0)::float  AS total_mwh_30d,
-        COALESCE(r.solar_mwh_30d,   0)::float  AS solar_mwh_30d,
-        COALESCE(r.wind_mwh_30d,    0)::float  AS wind_mwh_30d,
-        COALESCE(r.days_with_data,  0)::int    AS days_with_data
-      FROM latest l
-      LEFT JOIN rolling r USING (iso)
-      ORDER BY l.iso
-    `);
-    return rows;
-  } catch (err) {
-    console.error("fetchSummaries error:", (err as Error).message);
-    return [];
-  }
+  if (!summary) return [];
+  const allRows = history ?? [];
+
+  return summary.map((s) => {
+    const isoRows = allRows.filter((r) => r.iso === s.iso);
+    const latest = isoRows.reduce<DailyRow | null>(
+      (best, r) => (!best || r.date > best.date ? r : best),
+      null,
+    );
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const daysWithData = isoRows.filter((r) => new Date(r.date) >= cutoff).length;
+
+    return {
+      iso: s.iso,
+      latest_date: s.latest_date,
+      solar_mwh_today: latest?.solar_mwh ?? 0,
+      wind_mwh_today: latest?.wind_mwh ?? 0,
+      total_mwh_today: latest?.total_mwh ?? 0,
+      total_mwh_30d: s.total_30d_mwh ?? 0,
+      solar_mwh_30d: s.solar_30d_mwh ?? 0,
+      wind_mwh_30d: s.wind_30d_mwh ?? 0,
+      days_with_data: daysWithData,
+    };
+  });
 }
 
 export async function fetchAvailableISOs(): Promise<string[]> {
-  const db = getPool();
-  if (!db) return [];
-
-  try {
-    const { rows } = await db.query<{ iso: string }>(
-      "SELECT DISTINCT iso FROM curtailment_daily ORDER BY iso"
-    );
-    return rows.map((r) => r.iso);
-  } catch (err) {
-    console.error("fetchAvailableISOs error:", (err as Error).message);
-    return [];
-  }
+  const data = await apiFetch<Array<{ iso: string }>>("/curtailment/summary");
+  if (!data) return [];
+  return data.map((r) => r.iso);
 }

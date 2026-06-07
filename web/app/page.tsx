@@ -30,17 +30,17 @@ const ISO_META: Record<string, {
   CAISO: {
     label: "CAISO", region: "California",
     accent: "#fb7185", accentRgb: "251,113,133",
-    source: "CAISO · gridstatus",
+    source: "CAISO · kardashev-data",
   },
   SPP: {
     label: "SPP", region: "Southwest Power Pool",
     accent: "#34d399", accentRgb: "52,211,153",
-    source: "SPP · gridstatus",
+    source: "SPP · kardashev-data",
   },
   ERCOT: {
     label: "ERCOT", region: "Texas",
     accent: "#38bdf8", accentRgb: "56,189,248",
-    source: "ERCOT · est. via gridstatus",
+    source: "ERCOT · kardashev-data",
   },
 };
 
@@ -317,7 +317,9 @@ export default async function HomePage() {
           <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: MONO }}>
             © {new Date().getFullYear()}{" "}
             <a href="https://kardashevlabs.org" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>Kardashev Labs</a>
-            {" · "}Data via gridstatus ·{" "}
+            {" · "}Data via{" "}
+            <a href="https://data.kardashevlabs.org" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>kardashev-data</a>
+            {" · "}
             <a href="https://github.com/kardashev-lab" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>github.com/kardashev-lab</a>
           </p>
           <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", fontFamily: MONO }}>curtailment.kardashevlabs.org</p>
