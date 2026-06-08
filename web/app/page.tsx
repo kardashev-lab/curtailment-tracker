@@ -86,7 +86,7 @@ export default async function HomePage() {
       {/* ── Hero (full-bleed photo) ── */}
       <FadeUp delay={0}>
         <CurtailmentHero>
-          <div style={{ maxWidth: 1152, margin: "0 auto", padding: "160px 24px 72px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+          <div className="hero-inner">
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 28,
               padding: "6px 14px", borderRadius: 999, fontSize: 10,
@@ -136,7 +136,7 @@ export default async function HomePage() {
         </CurtailmentHero>
       </FadeUp>
 
-      <div style={{ position: "relative", zIndex: 10, maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+      <div className="page-inner">
 
         {/* ── ISO cards ── */}
         {hasData ? (
@@ -149,7 +149,7 @@ export default async function HomePage() {
                 <FadeUp key={s.iso} delay={0.08 + i * 0.06}>
                   <div style={{ borderRadius: 28, border: `1px solid rgba(${meta.accentRgb},0.14)`, background: "#0b1812", overflow: "hidden" }}>
                     {/* Top bar */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 32px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div className="iso-card-top">
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{
                           display: "inline-flex", alignItems: "center", gap: 6,
@@ -170,9 +170,9 @@ export default async function HomePage() {
                     </div>
 
                     {/* Body */}
-                    <div style={{ display: "flex" }}>
+                    <div className="iso-card-body">
                       {/* Stats */}
-                      <div style={{ width: 220, flexShrink: 0, padding: "22px 20px 22px 28px", display: "flex", flexDirection: "column", gap: 10, borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div className="iso-card-stats">
                         <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(251,113,133,0.07)", border: "1px solid rgba(251,113,133,0.14)" }}>
                           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(251,113,133,0.55)", marginBottom: 8 }}>Solar curtailed</div>
                           <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fb7185", fontFamily: MONO }}>{fmtGwh(s.solar_mwh_today)}</div>
@@ -181,7 +181,7 @@ export default async function HomePage() {
                           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(52,211,153,0.55)", marginBottom: 8 }}>Wind curtailed</div>
                           <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#34d399", fontFamily: MONO }}>{fmtGwh(s.wind_mwh_today)}</div>
                         </div>
-                        <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", gap: 5 }}>
+                        <div className="iso-card-stats-30d" style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", gap: 5 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
                             <span style={{ color: "rgba(255,255,255,0.28)" }}>Solar · 30d</span>
                             <span style={{ fontFamily: MONO, color: "rgba(251,113,133,0.6)" }}>{fmtGwh(s.solar_mwh_30d)}</span>
@@ -194,7 +194,7 @@ export default async function HomePage() {
                       </div>
 
                       {/* Chart */}
-                      <div style={{ flex: 1, padding: "20px 28px 16px 20px", minWidth: 0 }}>
+                      <div className="iso-card-chart">
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                           <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.2)" }}>90-day trend</span>
                           <div style={{ display: "flex", gap: 14, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
@@ -231,7 +231,7 @@ export default async function HomePage() {
 
         {/* ── Bottom row ── */}
         <FadeUp delay={0.2}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, paddingTop: 16, paddingBottom: 100, alignItems: "start" }}>
+          <div className="bottom-grid">
             <div style={{ borderRadius: 24, border: "1px solid rgba(52,211,153,0.1)", background: "#0b1812", overflow: "hidden" }}>
               <div style={{ background: "#050f0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <Image
@@ -295,7 +295,7 @@ export default async function HomePage() {
                   </span>
                   <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "rgba(52,211,153,0.12)", fontSize: 12 }}>↗</span>
                 </a>
-                <div style={{ display: "flex", gap: 8, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                <div className="related-tools">
                   {[
                     { label: "Queue Tracker", href: "https://interconnection-queue.kardashevlabs.org" },
                     { label: "Grid Demand",   href: "https://grid-demand.kardashevlabs.org" },
