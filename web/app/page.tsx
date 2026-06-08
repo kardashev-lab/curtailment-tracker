@@ -4,7 +4,8 @@ import CurtailmentChart from "@/components/CurtailmentChart";
 import CurtailmentHero from "@/components/CurtailmentHero";
 import FadeUp from "@/components/FadeUp";
 
-export const revalidate = 3600;
+// Daily data — always fetch fresh from kardashev-data (no ISR cache)
+export const dynamic = "force-dynamic";
 
 function fmtGwh(mwh: number) {
   const gwh = mwh / 1000;

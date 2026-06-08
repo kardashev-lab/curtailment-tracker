@@ -1,5 +1,4 @@
 const API_BASE = process.env.KARDASHEV_API_URL ?? "https://data.kardashevlabs.org";
-const REVALIDATE = 3600;
 
 export type DailyRow = {
   iso: string;
@@ -23,9 +22,7 @@ export type ISOSummary = {
 
 async function apiFetch<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      next: { revalidate: REVALIDATE },
-    });
+    const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
     if (!res.ok) return null;
     return res.json() as Promise<T>;
   } catch (err) {
@@ -57,10 +54,12 @@ export async function fetchSummaries(): Promise<ISOSummary[]> {
 
   return summary.map((s) => {
     const isoRows = allRows.filter((r) => r.iso === s.iso);
-    const latest = isoRows.reduce<DailyRow | null>(
-      (best, r) => (!best || r.date > best.date ? r : best),
-      null,
-    );
+    const latest =
+      isoRows.find((r) => r.date === s.latest_date) ??
+      isoRows.reduce<DailyRow | null>(
+        (best, r) => (!best || r.date > best.date ? r : best),
+        null,
+      );
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);
     const daysWithData = isoRows.filter((r) => new Date(r.date) >= cutoff).length;
