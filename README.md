@@ -1,6 +1,6 @@
 # US Curtailment Tracker
 
-Live at **curtailment.kardashevlabs.org** · Part of [Kardashev Labs](https://kardashevlabs.org)
+Live at **curtailment-tracker.kardashevlabs.org** · Part of [Kardashev Labs](https://kardashevlabs.org)
 
 How much solar and wind energy is being thrown away every day — by ISO.
 Curtailment signals where the grid is congested and where battery storage is needed.

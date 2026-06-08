@@ -329,7 +329,7 @@ export default async function HomePage() {
             {" · "}
             <a href="https://github.com/kardashev-lab" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>github.com/kardashev-lab</a>
           </p>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", fontFamily: MONO }}>curtailment.kardashevlabs.org</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", fontFamily: MONO }}>curtailment-tracker.kardashevlabs.org</p>
         </div>
       </footer>
     </div>
