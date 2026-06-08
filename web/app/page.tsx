@@ -63,6 +63,10 @@ export default async function HomePage() {
   const totalWind30d  = summaries.reduce((a, s) => a + s.wind_mwh_30d,  0);
   const totalAll30d   = summaries.reduce((a, s) => a + s.total_mwh_30d, 0);
   const hasData = summaries.length > 0;
+  const latestDataDate = summaries.reduce(
+    (max, s) => (s.latest_date > max ? s.latest_date : max),
+    "",
+  );
 
   return (
     <div style={{ minHeight: "100vh", color: "#fff", overflowX: "hidden", background: "#050f0b" }}>
@@ -94,8 +98,10 @@ export default async function HomePage() {
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(52,211,153,0.12)",
               color: "rgba(255,255,255,0.4)",
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fb7185", display: "inline-block" }} className="animate-pulse-slow" />
-              Live · Updated daily · Open source
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
+              {hasData && latestDataDate
+                ? `Daily · As of ${fmtDate(latestDataDate)} · Open source`
+                : "Daily · Open source"}
             </span>
 
             {caiso ? (
@@ -220,10 +226,10 @@ export default async function HomePage() {
         ) : (
           <FadeUp delay={0.1}>
             <div style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(52,211,153,0.12)", background: "#0b1812" }}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>No data yet — fetcher runs daily at 08:00 UTC</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>No data yet — ingested daily via kardashev-data</p>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", lineHeight: 1.7 }}>
-                Set <code style={{ fontFamily: MONO, background: "rgba(255,255,255,0.07)", padding: "2px 6px", borderRadius: 4, color: "rgba(255,255,255,0.4)" }}>DATABASE_URL</code>
-                {" "}and run <code style={{ fontFamily: MONO, background: "rgba(255,255,255,0.07)", padding: "2px 6px", borderRadius: 4, color: "rgba(255,255,255,0.4)" }}>python services/fetcher/fetch.py</code>
+                Source:{" "}
+                <a href="https://data.kardashevlabs.org/curtailment/summary" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org</a>
               </p>
             </div>
           </FadeUp>
@@ -279,7 +285,7 @@ export default async function HomePage() {
               <div style={{ padding: "24px 28px 28px" }}>
                 <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.28)", marginBottom: 12 }}>Open source</h2>
                 <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.38)", marginBottom: 20 }}>
-                  Python fetcher · PostgreSQL · Next.js. 2 ISOs live. Fork it, add yours.
+                  kardashev-data API · Next.js. CAISO + SPP live. Fork it, add yours.
                 </p>
                 <a
                   href="https://github.com/kardashev-lab/curtailment-tracker"
