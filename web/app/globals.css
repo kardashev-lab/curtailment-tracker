@@ -75,7 +75,7 @@ body {
 .hero-inner {
   max-width: 1152px;
   margin: 0 auto;
-  padding: 160px 24px 72px;
+  padding: 120px 24px 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,7 +135,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  .hero-inner { padding: 96px 16px 48px; }
+  .hero-inner { padding: 72px 16px 48px; }
   .page-inner { padding: 0 16px; }
   .iso-card-top {
     flex-wrap: wrap;
