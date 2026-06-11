@@ -100,7 +100,7 @@ export default async function HomePage() {
                   <span style={{ color: "#fb7185" }}>{fmtGwh(caiso.total_mwh_today)}</span>
                   {" "}of clean energy wasted yesterday in California
                 </h1>
-                <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.35)", maxWidth: 460, marginBottom: 32 }}>
+                <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.55)", maxWidth: 460, marginBottom: 32 }}>
                   The duck curve problem made visible. {fmtDate(caiso.latest_date)} · {summaries.length} ISO{summaries.length !== 1 ? "s" : ""} tracked.
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
@@ -112,7 +112,7 @@ export default async function HomePage() {
                   ].map((s) => (
                     <div key={s.label} style={{ padding: "8px 16px", borderRadius: 999, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(52,211,153,0.1)" }}>
                       <span style={{ fontFamily: MONO, fontWeight: 600, fontSize: "0.85rem", color: s.color }}>{s.value}</span>
-                      <span style={{ marginLeft: 8, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.28)" }}>{s.label}</span>
+                      <span style={{ marginLeft: 8, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.45)" }}>{s.label}</span>
                     </div>
                   ))}
                 </div>
@@ -122,7 +122,7 @@ export default async function HomePage() {
                 <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 20, maxWidth: 720 }}>
                   US Curtailment <span style={{ color: "#fb7185" }}>Tracker</span>
                 </h1>
-                <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.35)", maxWidth: 460 }}>
+                <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.55)", maxWidth: 460 }}>
                   How much solar and wind is thrown away every day — by ISO.
                   Curtailment signals where the grid is congested and where storage is needed.
                 </p>
@@ -174,10 +174,10 @@ export default async function HomePage() {
                           {meta.label}
                         </span>
                         {meta.region && (
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.28)", fontFamily: MONO }}>{meta.region}</span>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontFamily: MONO }}>{meta.region}</span>
                         )}
                       </div>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>{fmtDate(s.latest_date)}</span>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: MONO }}>{fmtDate(s.latest_date)}</span>
                     </div>
 
                     {/* Body */}
@@ -185,21 +185,21 @@ export default async function HomePage() {
                       {/* Stats */}
                       <div className="iso-card-stats">
                         <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(251,113,133,0.07)", border: "1px solid rgba(251,113,133,0.14)" }}>
-                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(251,113,133,0.55)", marginBottom: 8 }}>Solar curtailed</div>
+                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(251,113,133,0.78)", marginBottom: 8 }}>Solar curtailed</div>
                           <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fb7185", fontFamily: MONO }}>{fmtGwh(s.solar_mwh_today)}</div>
                         </div>
                         <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.13)" }}>
-                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(52,211,153,0.55)", marginBottom: 8 }}>Wind curtailed</div>
+                          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(52,211,153,0.78)", marginBottom: 8 }}>Wind curtailed</div>
                           <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#34d399", fontFamily: MONO }}>{fmtGwh(s.wind_mwh_today)}</div>
                         </div>
                         <div className="iso-card-stats-30d" style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", gap: 5 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                            <span style={{ color: "rgba(255,255,255,0.28)" }}>Solar · 30d</span>
-                            <span style={{ fontFamily: MONO, color: "rgba(251,113,133,0.6)" }}>{fmtGwh(s.solar_mwh_30d)}</span>
+                            <span style={{ color: "rgba(255,255,255,0.45)" }}>Solar · 30d</span>
+                            <span style={{ fontFamily: MONO, color: "rgba(251,113,133,0.8)" }}>{fmtGwh(s.solar_mwh_30d)}</span>
                           </div>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                            <span style={{ color: "rgba(255,255,255,0.28)" }}>Wind · 30d</span>
-                            <span style={{ fontFamily: MONO, color: "rgba(52,211,153,0.6)" }}>{fmtGwh(s.wind_mwh_30d)}</span>
+                            <span style={{ color: "rgba(255,255,255,0.45)" }}>Wind · 30d</span>
+                            <span style={{ fontFamily: MONO, color: "rgba(52,211,153,0.8)" }}>{fmtGwh(s.wind_mwh_30d)}</span>
                           </div>
                         </div>
                       </div>
@@ -207,8 +207,8 @@ export default async function HomePage() {
                       {/* Chart */}
                       <div className="iso-card-chart">
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.2)" }}>90-day trend</span>
-                          <div style={{ display: "flex", gap: 14, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
+                          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.4)" }}>90-day trend</span>
+                          <div style={{ display: "flex", gap: 14, fontSize: 10, color: "rgba(255,255,255,0.42)" }}>
                             <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
                               <span style={{ display: "inline-block", width: 12, height: 1, background: "#fb7185" }} />Solar
                             </span>
@@ -218,7 +218,7 @@ export default async function HomePage() {
                           </div>
                         </div>
                         <CurtailmentChart data={history} isoLabel={meta.label} />
-                        <div style={{ marginTop: 10, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.13)", fontFamily: MONO }}>
+                        <div style={{ marginTop: 10, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.32)", fontFamily: MONO }}>
                           {meta.source}
                         </div>
                       </div>
@@ -238,7 +238,7 @@ export default async function HomePage() {
                 The kardashev-data API didn&apos;t respond, so curtailment numbers can&apos;t be
                 shown right now. This is usually temporary — refresh in a minute.
               </p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", lineHeight: 1.7 }}>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>
                 Check status:{" "}
                 <a href="https://data.kardashevlabs.org/health" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org/health</a>
               </p>
@@ -247,8 +247,8 @@ export default async function HomePage() {
         ) : (
           <FadeUp delay={0.1}>
             <div style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(52,211,153,0.12)", background: "#0b1812" }}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>No data yet — ingested daily via kardashev-data</p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", lineHeight: 1.7 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", marginBottom: 12 }}>No data yet — ingested daily via kardashev-data</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>
                 Source:{" "}
                 <a href="https://data.kardashevlabs.org/curtailment/summary" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org</a>
               </p>
@@ -271,13 +271,13 @@ export default async function HomePage() {
                 />
               </div>
               <div style={{ padding: "24px 28px 28px" }}>
-                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.28)", marginBottom: 16 }}>What is curtailment?</h2>
-                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.42)" }}>
+                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.45)", marginBottom: 16 }}>What is curtailment?</h2>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.58)" }}>
                   When the grid can&apos;t absorb all available solar and wind, operators instruct generators
                   to produce less — even when the sun is shining. High curtailment signals congested
                   transmission, insufficient storage, or poor demand timing.
                 </p>
-                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.28)", marginTop: 12 }}>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.45)", marginTop: 12 }}>
                   CAISO leads in solar curtailment (the{" "}
                   <a
                     href="https://en.wikipedia.org/wiki/Duck_curve"
@@ -304,8 +304,8 @@ export default async function HomePage() {
                 />
               </div>
               <div style={{ padding: "24px 28px 28px" }}>
-                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.28)", marginBottom: 12 }}>Open source</h2>
-                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.38)", marginBottom: 20 }}>
+                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.45)", marginBottom: 12 }}>Open source</h2>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.52)", marginBottom: 20 }}>
                   kardashev-data API · Next.js. CAISO + SPP live. Fork it, add yours.
                 </p>
                 <a
@@ -327,7 +327,7 @@ export default async function HomePage() {
                     { label: "Queue Tracker", href: "https://interconnection-queue.kardashevlabs.org" },
                     { label: "Grid Demand",   href: "https://grid-demand.kardashevlabs.org" },
                   ].map((t) => (
-                    <a key={t.label} href={t.href} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", padding: "8px 12px", borderRadius: 12, fontSize: 11, fontWeight: 500, textDecoration: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.38)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <a key={t.label} href={t.href} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", padding: "8px 12px", borderRadius: 12, fontSize: 11, fontWeight: 500, textDecoration: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.52)", border: "1px solid rgba(255,255,255,0.07)" }}>
                       {t.label}
                     </a>
                   ))}
@@ -349,7 +349,7 @@ export default async function HomePage() {
             {" · "}
             <a href="https://github.com/kardashev-lab" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>github.com/kardashev-lab</a>
           </p>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", fontFamily: MONO }}>curtailment-tracker.kardashevlabs.org</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.52)", fontFamily: MONO }}>curtailment-tracker.kardashevlabs.org</p>
         </div>
       </footer>
     </div>

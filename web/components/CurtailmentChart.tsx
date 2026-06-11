@@ -64,7 +64,7 @@ export default function CurtailmentChart({ data, isoLabel }: Props) {
           alignItems: "center",
           justifyContent: "center",
           height: 240,
-          color: "rgba(255,255,255,0.15)",
+          color: "rgba(255,255,255,0.35)",
           fontSize: 13,
         }}
       >
@@ -110,14 +110,14 @@ export default function CurtailmentChart({ data, isoLabel }: Props) {
         />
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)", fontFamily: "var(--font-jetbrains-mono, monospace)" }}
+          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.35)", fontFamily: "var(--font-jetbrains-mono, monospace)" }}
           axisLine={false}
           tickLine={false}
           interval="preserveStartEnd"
           tickMargin={8}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)", fontFamily: "var(--font-jetbrains-mono, monospace)" }}
+          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.35)", fontFamily: "var(--font-jetbrains-mono, monospace)" }}
           axisLine={false}
           tickLine={false}
           tickFormatter={(v) => fmtGwh(v)}
