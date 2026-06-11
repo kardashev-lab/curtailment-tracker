@@ -4,28 +4,21 @@ Thanks for helping track wasted renewable energy. This project turns public ISO 
 
 ## What this repo does
 
-- Fetches daily curtailment data for CAISO, ERCOT, and SPP where available.
-- Stores daily ISO-level values in Postgres.
-- Serves a Next.js dashboard with trends, summaries, and context.
+- Serves a Next.js dashboard with daily curtailment trends, summaries, and context.
+- Reads data from the [kardashev-data](https://github.com/kardashev-lab/kardashev-data) API (`data.kardashevlabs.org`) — ingestion does **not** live in this repo.
 
-Stack: Python fetcher, Postgres, Next.js 15, React 19, Tailwind CSS v4, Recharts, Docker Compose, GitHub Actions.
+Stack: Next.js 15, React 19, Tailwind CSS v4, Recharts.
 
 ## Local setup
 
 ```bash
-docker compose up postgres -d
-
-pip install -r services/fetcher/requirements.txt
-DATABASE_URL=postgres://curtailment:curtailment@localhost:5432/curtailment \
-BACKFILL_DAYS=90 \
-python services/fetcher/fetch.py
-
 cd web
 npm install
-DATABASE_URL=postgres://curtailment:curtailment@localhost:5432/curtailment npm run dev
+npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. The app reads from the public API by default; set
+`KARDASHEV_API_URL` to point at a different instance.
 
 ## Before opening a PR
 
@@ -35,25 +28,20 @@ From `web/`:
 npm run build
 ```
 
-If you change the fetcher, run it locally for the affected ISO and include the date range tested.
-
 ## Good first contributions
 
-- Add SPP documentation and coverage notes.
 - Improve chart labels and units.
 - Add a "what changed today" summary card.
 - Improve mobile layout for the ISO cards.
-- Add tests or validation for duplicate daily rows.
+- Surface a visible error state when the API is unreachable.
 
-## Data contribution guidelines
+## Data notes
 
+- New ISOs are added upstream in kardashev-data; this dashboard picks them up automatically (add display metadata in `web/app/page.tsx` `ISO_META`).
 - Treat missing data differently from zero curtailment.
 - Keep dates explicit and timezone-safe.
-- Document source quirks in the README.
-- Do not commit database dumps or secrets.
 
 ## PR guidelines
 
-- Keep one source or UI area per PR when possible.
+- Keep one UI area per PR when possible.
 - Include screenshots for UI changes.
-- Mention which ISO and dates you tested.

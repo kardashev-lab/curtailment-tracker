@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DailyRow } from "@/lib/db";
+import type { DailyRow } from "@/lib/api";
 
 type Props = { data: DailyRow[] };
 

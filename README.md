@@ -1,83 +1,78 @@
 # US Curtailment Tracker
 
-Live at **curtailment-tracker.kardashevlabs.org** · Part of [Kardashev Labs](https://kardashevlabs.org)
+Live at **[curtailment-tracker.kardashevlabs.org](https://curtailment-tracker.kardashevlabs.org)** · Part of [Kardashev Labs](https://kardashevlabs.org)
 
 How much solar and wind energy is being thrown away every day — by ISO.
 Curtailment signals where the grid is congested and where battery storage is needed.
+
+## Architecture
+
+This repo is the **frontend only**. Data ingestion lives in
+[kardashev-data](https://github.com/kardashev-lab/kardashev-data), which fetches daily
+curtailment numbers from each ISO and serves them via a public API.
+
+```
+ISO reports → kardashev-data (ingest + Postgres + API)
+                     ↓
+        data.kardashevlabs.org/curtailment
+                     ↓
+        Next.js dashboard (this repo)
+```
+
+The dashboard server-renders on every request and pulls everything it needs in two API
+calls: `/curtailment/summary` and `/curtailment?days=90`.
 
 ## ISOs covered
 
 | ISO | Region | Solar | Wind |
 |-----|--------|-------|------|
 | CAISO | California | ✓ | ✓ |
+| SPP | Southwest Power Pool | — | ✓ |
 | ERCOT | Texas | — | ✓ |
 
-More ISOs coming. PRs welcome.
+More ISOs coming. PRs welcome — new ISOs added upstream in kardashev-data show up here
+automatically.
 
 ## Data sources
 
-- **CAISO**: [OASIS ENE_SLRS report](https://oasis.caiso.com) (Statewide Lost Renewable Statistics) via [gridstatus](https://github.com/kmax12/gridstatus)
-- **ERCOT**: Market curtailment reports via gridstatus
+- **CAISO**: [OASIS ENE_SLRS report](https://oasis.caiso.com) (Statewide Lost Renewable Statistics)
+- **SPP**: Wind curtailment derived from SPP market reports
+- **ERCOT**: Market curtailment reports
 
-Data refreshed daily at **08:00 UTC** (midnight PT) via GitHub Actions, after ISOs finalize previous-day data.
+All fetched daily by kardashev-data after ISOs finalize previous-day data.
 
 ## Stack
 
-- **Fetcher**: Python 3.12, gridstatus, psycopg2
-- **Database**: PostgreSQL 16
-- **Frontend**: Next.js 15, Tailwind CSS v4, Recharts
-- **Infra**: Docker Compose (local), GitHub Actions (cron)
+- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Recharts
+- **Data**: [kardashev-data](https://github.com/kardashev-lab/kardashev-data) API
+- **Infra**: Docker (standalone Next.js image)
 
 ## Local development
 
 ```bash
-# 1. Start Postgres
-docker compose up postgres -d
-
-# 2. Seed the database (backfills 90 days)
-pip install -r services/fetcher/requirements.txt
-DATABASE_URL=postgres://curtailment:curtailment@localhost:5432/curtailment \
-BACKFILL_DAYS=90 \
-python services/fetcher/fetch.py
-
-# 3. Run the web app
 cd web
 npm install
-DATABASE_URL=postgres://curtailment:curtailment@localhost:5432/curtailment \
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. By default the app reads from the public API at
+`data.kardashevlabs.org`; point it elsewhere with:
 
-## GitHub Actions setup
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `KARDASHEV_API_URL` | `https://data.kardashevlabs.org` | Base URL of the kardashev-data API |
 
-Add one secret to the repo:
+Or run the containerized build:
 
-| Secret | Value |
-|--------|-------|
-| `DATABASE_URL` | Postgres connection string for your hosted DB |
-
-The workflow runs daily and also supports manual dispatch with optional `fetch_date` override.
-
-## Schema
-
-```sql
-CREATE TABLE curtailment_daily (
-    iso        TEXT    NOT NULL,
-    date       DATE    NOT NULL,
-    solar_mwh  NUMERIC,
-    wind_mwh   NUMERIC,
-    total_mwh  NUMERIC,
-    fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (iso, date)
-);
+```bash
+docker compose up --build
 ```
 
 ## What is curtailment?
 
 Curtailment is when grid operators tell solar or wind generators to produce less than they could — because there's more electricity than the grid can absorb. It's wasted clean energy. High curtailment signals congested transmission, insufficient storage, or a mismatch between when generation peaks and when demand peaks (the duck curve problem).
 
-CAISO leads the US in solar curtailment. In 2023, California curtailed over 2.4 million MWh of solar — enough to power ~400,000 homes for a year.
+CAISO leads the US in solar curtailment. In 2023, California curtailed over 2.4 million MWh of solar — enough to power ~400,000 homes for a year. SPP leads in wind curtailment across the Great Plains.
 
 ## License
 

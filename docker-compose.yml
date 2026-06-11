@@ -1,40 +1,8 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: curtailment
-      POSTGRES_USER: curtailment
-      POSTGRES_PASSWORD: curtailment
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U curtailment -d curtailment"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  fetcher:
-    build:
-      context: ./services/fetcher
-    environment:
-      DATABASE_URL: postgres://curtailment:curtailment@postgres:5432/curtailment
-      BACKFILL_DAYS: "90"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   web:
     build:
       context: ./web
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://curtailment:curtailment@postgres:5432/curtailment
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-volumes:
-  pgdata:
+      KARDASHEV_API_URL: ${KARDASHEV_API_URL:-https://data.kardashevlabs.org}

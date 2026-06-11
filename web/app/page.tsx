@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { fetchHistory, fetchSummaries } from "@/lib/db";
+import { fetchDashboardData } from "@/lib/api";
 import CurtailmentChart from "@/components/CurtailmentChart";
 import CurtailmentHero from "@/components/CurtailmentHero";
 import FadeUp from "@/components/FadeUp";
@@ -46,18 +46,7 @@ const ISO_META: Record<string, {
 };
 
 export default async function HomePage() {
-  const [summaries, caisoHistory, sppHistory, ercotHistory] = await Promise.all([
-    fetchSummaries(),
-    fetchHistory("CAISO", 90),
-    fetchHistory("SPP",   90),
-    fetchHistory("ERCOT", 90),
-  ]);
-
-  const historyByIso: Record<string, typeof caisoHistory> = {
-    CAISO: caisoHistory,
-    SPP:   sppHistory,
-    ERCOT: ercotHistory,
-  };
+  const { summaries, historyByIso } = await fetchDashboardData(90);
 
   const caiso = summaries.find((s) => s.iso === "CAISO");
   const totalSolar30d = summaries.reduce((a, s) => a + s.solar_mwh_30d, 0);

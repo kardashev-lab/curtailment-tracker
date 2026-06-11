@@ -20,10 +20,26 @@ export type ISOSummary = {
   days_with_data: number;
 };
 
+export type DashboardData = {
+  summaries: ISOSummary[];
+  historyByIso: Record<string, DailyRow[]>;
+};
+
+type SummaryRow = {
+  iso: string;
+  latest_date: string;
+  solar_30d_mwh: number;
+  wind_30d_mwh: number;
+  total_30d_mwh: number;
+};
+
 async function apiFetch<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`kardashev API error: ${path} returned ${res.status}`);
+      return null;
+    }
     return res.json() as Promise<T>;
   } catch (err) {
     console.error("kardashev API error:", (err as Error).message);
@@ -31,37 +47,36 @@ async function apiFetch<T>(path: string): Promise<T | null> {
   }
 }
 
-export async function fetchHistory(iso: string, days = 90): Promise<DailyRow[]> {
-  const data = await apiFetch<DailyRow[]>(`/curtailment?iso=${iso}&days=${days}`);
-  if (!data) return [];
-  return [...data].sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export async function fetchSummaries(): Promise<ISOSummary[]> {
+/**
+ * Fetches everything the dashboard needs in two API calls:
+ * the per-ISO 30-day summary and the full multi-ISO daily history.
+ */
+export async function fetchDashboardData(days = 90): Promise<DashboardData> {
   const [summary, history] = await Promise.all([
-    apiFetch<Array<{
-      iso: string;
-      latest_date: string;
-      solar_30d_mwh: number;
-      wind_30d_mwh: number;
-      total_30d_mwh: number;
-    }>>("/curtailment/summary"),
-    apiFetch<DailyRow[]>("/curtailment?days=90"),
+    apiFetch<SummaryRow[]>("/curtailment/summary"),
+    apiFetch<DailyRow[]>(`/curtailment?days=${days}`),
   ]);
 
-  if (!summary) return [];
   const allRows = history ?? [];
 
-  return summary.map((s) => {
-    const isoRows = allRows.filter((r) => r.iso === s.iso);
+  const historyByIso: Record<string, DailyRow[]> = {};
+  for (const row of allRows) {
+    (historyByIso[row.iso] ??= []).push(row);
+  }
+  for (const rows of Object.values(historyByIso)) {
+    rows.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  if (!summary) return { summaries: [], historyByIso };
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+
+  const summaries = summary.map((s) => {
+    const isoRows = historyByIso[s.iso] ?? [];
     const latest =
       isoRows.find((r) => r.date === s.latest_date) ??
-      isoRows.reduce<DailyRow | null>(
-        (best, r) => (!best || r.date > best.date ? r : best),
-        null,
-      );
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
+      (isoRows.length > 0 ? isoRows[isoRows.length - 1] : null);
     const daysWithData = isoRows.filter((r) => new Date(r.date) >= cutoff).length;
 
     return {
@@ -76,10 +91,6 @@ export async function fetchSummaries(): Promise<ISOSummary[]> {
       days_with_data: daysWithData,
     };
   });
-}
 
-export async function fetchAvailableISOs(): Promise<string[]> {
-  const data = await apiFetch<Array<{ iso: string }>>("/curtailment/summary");
-  if (!data) return [];
-  return data.map((r) => r.iso);
+  return { summaries, historyByIso };
 }
