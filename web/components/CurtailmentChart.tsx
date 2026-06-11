@@ -11,7 +11,11 @@ import {
 } from "recharts";
 import type { DailyRow } from "@/lib/api";
 
-type Props = { data: DailyRow[] };
+type Props = {
+  data: DailyRow[];
+  /** ISO name used in the chart's screen-reader description. */
+  isoLabel?: string;
+};
 
 function fmtGwh(mwh: number) {
   const gwh = mwh / 1000;
@@ -51,7 +55,7 @@ function CustomTooltip({ active, payload, label }: {
   );
 }
 
-export default function CurtailmentChart({ data }: Props) {
+export default function CurtailmentChart({ data, isoLabel }: Props) {
   if (!data.length) {
     return (
       <div
@@ -78,7 +82,14 @@ export default function CurtailmentChart({ data }: Props) {
   const hasSolar = data.some((d) => d.solar_mwh > 0);
   const hasWind  = data.some((d) => d.wind_mwh > 0);
 
+  const latest = data[data.length - 1];
+  const chartLabel = [
+    `${isoLabel ? `${isoLabel} ` : ""}daily solar and wind curtailment over the last ${data.length} days.`,
+    latest ? `Most recent day: ${fmtGwh(latest.solar_mwh)} solar and ${fmtGwh(latest.wind_mwh)} wind curtailed.` : null,
+  ].filter(Boolean).join(" ");
+
   return (
+    <div role="img" aria-label={chartLabel}>
     <ResponsiveContainer width="100%" height={240}>
       <AreaChart data={chartData} margin={{ top: 4, right: 2, left: 0, bottom: 0 }}>
         <defs>
@@ -138,5 +149,6 @@ export default function CurtailmentChart({ data }: Props) {
         )}
       </AreaChart>
     </ResponsiveContainer>
+    </div>
   );
 }

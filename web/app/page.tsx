@@ -217,7 +217,7 @@ export default async function HomePage() {
                             </span>
                           </div>
                         </div>
-                        <CurtailmentChart data={history} />
+                        <CurtailmentChart data={history} isoLabel={meta.label} />
                         <div style={{ marginTop: 10, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.13)", fontFamily: MONO }}>
                           {meta.source}
                         </div>

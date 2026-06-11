@@ -11,6 +11,22 @@
 
 html { scroll-behavior: smooth; }
 
+/* Keyboard focus indicator (mouse clicks don't trigger :focus-visible) */
+:focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
   background-color: #050f0b;
   background-image:
