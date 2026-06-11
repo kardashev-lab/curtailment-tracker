@@ -46,7 +46,7 @@ const ISO_META: Record<string, {
 };
 
 export default async function HomePage() {
-  const { summaries, historyByIso } = await fetchDashboardData(90);
+  const { summaries, historyByIso, apiError } = await fetchDashboardData(90);
 
   const caiso = summaries.find((s) => s.iso === "CAISO");
   const totalSolar30d = summaries.reduce((a, s) => a + s.solar_mwh_30d, 0);
@@ -134,6 +134,21 @@ export default async function HomePage() {
 
       <div className="page-inner">
 
+        {/* ── API failure banner (partial data still renders below) ── */}
+        {apiError && hasData && (
+          <FadeUp delay={0.05}>
+            <div role="alert" style={{
+              display: "flex", alignItems: "center", gap: 10,
+              marginBottom: 16, padding: "12px 18px", borderRadius: 14,
+              border: "1px solid rgba(251,113,133,0.25)", background: "rgba(251,113,133,0.06)",
+              fontSize: 12.5, color: "rgba(251,113,133,0.85)",
+            }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#fb7185", flexShrink: 0 }} className="animate-pulse-slow" />
+              Some data failed to load from the kardashev-data API — charts may be incomplete. Refresh to retry.
+            </div>
+          </FadeUp>
+        )}
+
         {/* ── ISO cards ── */}
         {hasData ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -213,6 +228,22 @@ export default async function HomePage() {
               );
             })}
           </div>
+        ) : apiError ? (
+          <FadeUp delay={0.1}>
+            <div role="alert" style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(251,113,133,0.22)", background: "#0b1812" }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(251,113,133,0.85)", marginBottom: 10 }}>
+                Couldn&apos;t reach the data API
+              </p>
+              <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.32)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 14px" }}>
+                The kardashev-data API didn&apos;t respond, so curtailment numbers can&apos;t be
+                shown right now. This is usually temporary — refresh in a minute.
+              </p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", lineHeight: 1.7 }}>
+                Check status:{" "}
+                <a href="https://data.kardashevlabs.org/health" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org/health</a>
+              </p>
+            </div>
+          </FadeUp>
         ) : (
           <FadeUp delay={0.1}>
             <div style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(52,211,153,0.12)", background: "#0b1812" }}>

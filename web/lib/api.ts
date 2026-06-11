@@ -23,6 +23,8 @@ export type ISOSummary = {
 export type DashboardData = {
   summaries: ISOSummary[];
   historyByIso: Record<string, DailyRow[]>;
+  /** True when one or both upstream API calls failed (vs. genuinely empty data). */
+  apiError: boolean;
 };
 
 type SummaryRow = {
@@ -57,6 +59,7 @@ export async function fetchDashboardData(days = 90): Promise<DashboardData> {
     apiFetch<DailyRow[]>(`/curtailment?days=${days}`),
   ]);
 
+  const apiError = summary === null || history === null;
   const allRows = history ?? [];
 
   const historyByIso: Record<string, DailyRow[]> = {};
@@ -67,7 +70,7 @@ export async function fetchDashboardData(days = 90): Promise<DashboardData> {
     rows.sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  if (!summary) return { summaries: [], historyByIso };
+  if (!summary) return { summaries: [], historyByIso, apiError };
 
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
@@ -92,5 +95,5 @@ export async function fetchDashboardData(days = 90): Promise<DashboardData> {
     };
   });
 
-  return { summaries, historyByIso };
+  return { summaries, historyByIso, apiError };
 }
