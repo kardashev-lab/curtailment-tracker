@@ -20,14 +20,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://curtailment-tracker
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "US Curtailment Tracker — Kardashev Labs",
+  title: "US Curtailment Tracker | Kardashev Labs",
   description:
-    "Daily solar and wind curtailment across US ISOs — CAISO leads the nation. The duck curve problem made visible.",
+    "Daily solar and wind curtailment across US ISOs. CAISO leads the nation. The duck curve problem made visible.",
   openGraph: {
     type: "website",
     locale: "en_US",
-    title: "US Curtailment Tracker — Kardashev Labs",
-    description: "How much clean energy is being thrown away every day — by ISO.",
+    title: "US Curtailment Tracker | Kardashev Labs",
+    description: "How much clean energy is being thrown away every day, by ISO.",
     url: siteUrl,
     siteName: "Kardashev Labs",
     images: [
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
         url: "/images/og-duck-curve.png",
         width: 1200,
         height: 630,
-        alt: "The duck curve — solar production vs net load",
+        alt: "The duck curve: solar production vs net load",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "US Curtailment Tracker — Kardashev Labs",
-    description: "How much clean energy is being thrown away every day — by ISO.",
+    title: "US Curtailment Tracker | Kardashev Labs",
+    description: "How much clean energy is being thrown away every day, by ISO.",
     images: ["/images/og-duck-curve.png"],
   },
 };

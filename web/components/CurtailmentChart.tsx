@@ -68,7 +68,7 @@ export default function CurtailmentChart({ data, isoLabel }: Props) {
           fontSize: 13,
         }}
       >
-        No data yet — fetcher runs daily at 08:00 UTC
+        No data yet. Fetcher runs daily at 08:00 UTC.
       </div>
     );
   }

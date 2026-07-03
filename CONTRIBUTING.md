@@ -5,7 +5,7 @@ Thanks for helping track wasted renewable energy. This project turns public ISO 
 ## What this repo does
 
 - Serves a Next.js dashboard with daily curtailment trends, summaries, and context.
-- Reads data from the [kardashev-data](https://github.com/kardashev-lab/kardashev-data) API (`data.kardashevlabs.org`) — ingestion does **not** live in this repo.
+- Reads data from the [kardashev-data](https://github.com/kardashev-lab/kardashev-data) API (`data.kardashevlabs.org`). Ingestion does **not** live in this repo.
 
 Stack: Next.js 15, React 19, Tailwind CSS v4, Recharts.
 

@@ -2,7 +2,7 @@
 
 Live at **[curtailment-tracker.kardashevlabs.org](https://curtailment-tracker.kardashevlabs.org)** · Part of [Kardashev Labs](https://kardashevlabs.org)
 
-How much solar and wind energy is being thrown away every day — by ISO.
+How much solar and wind energy is being thrown away every day, by ISO.
 Curtailment signals where the grid is congested and where battery storage is needed.
 
 ## Architecture
@@ -30,7 +30,7 @@ calls: `/curtailment/summary` and `/curtailment?days=90`.
 | SPP | Southwest Power Pool | — | ✓ |
 | ERCOT | Texas | — | ✓ |
 
-More ISOs coming. PRs welcome — new ISOs added upstream in kardashev-data show up here
+More ISOs coming. PRs welcome. New ISOs added upstream in kardashev-data show up here
 automatically.
 
 ## Data sources
@@ -70,9 +70,9 @@ docker compose up --build
 
 ## What is curtailment?
 
-Curtailment is when grid operators tell solar or wind generators to produce less than they could — because there's more electricity than the grid can absorb. It's wasted clean energy. High curtailment signals congested transmission, insufficient storage, or a mismatch between when generation peaks and when demand peaks (the duck curve problem).
+Curtailment is when grid operators tell solar or wind generators to produce less than they could, because there's more electricity than the grid can absorb. It's wasted clean energy. High curtailment signals congested transmission, insufficient storage, or a mismatch between when generation peaks and when demand peaks (the duck curve problem).
 
-CAISO leads the US in solar curtailment. In 2023, California curtailed over 2.4 million MWh of solar — enough to power ~400,000 homes for a year. SPP leads in wind curtailment across the Great Plains.
+CAISO leads the US in solar curtailment. In 2023, California curtailed over 2.4 million MWh of solar, enough to power ~400,000 homes for a year. SPP leads in wind curtailment across the Great Plains.
 
 ## License
 

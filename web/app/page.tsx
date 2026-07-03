@@ -4,7 +4,7 @@ import CurtailmentChart from "@/components/CurtailmentChart";
 import CurtailmentHero from "@/components/CurtailmentHero";
 import FadeUp from "@/components/FadeUp";
 
-// Daily data — always fetch fresh from kardashev-data (no ISR cache)
+// Daily data: always fetch fresh from kardashev-data (no ISR cache)
 export const dynamic = "force-dynamic";
 
 function fmtGwh(mwh: number) {
@@ -123,7 +123,7 @@ export default async function HomePage() {
                   US Curtailment <span style={{ color: "#fb7185" }}>Tracker</span>
                 </h1>
                 <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.55)", maxWidth: 460 }}>
-                  How much solar and wind is thrown away every day — by ISO.
+                  How much solar and wind is thrown away every day, by ISO.
                   Curtailment signals where the grid is congested and where storage is needed.
                 </p>
               </>
@@ -144,7 +144,7 @@ export default async function HomePage() {
               fontSize: 12.5, color: "rgba(251,113,133,0.85)",
             }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#fb7185", flexShrink: 0 }} className="animate-pulse-slow" />
-              Some data failed to load from the kardashev-data API — charts may be incomplete. Refresh to retry.
+              Some data failed to load from the kardashev-data API. Charts may be incomplete. Refresh to retry.
             </div>
           </FadeUp>
         )}
@@ -236,7 +236,7 @@ export default async function HomePage() {
               </p>
               <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.32)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 14px" }}>
                 The kardashev-data API didn&apos;t respond, so curtailment numbers can&apos;t be
-                shown right now. This is usually temporary — refresh in a minute.
+                shown right now. This is usually temporary. Refresh in a minute.
               </p>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>
                 Check status:{" "}
@@ -247,7 +247,7 @@ export default async function HomePage() {
         ) : (
           <FadeUp delay={0.1}>
             <div style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(52,211,153,0.12)", background: "#0b1812" }}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", marginBottom: 12 }}>No data yet — ingested daily via kardashev-data</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", marginBottom: 12 }}>No data yet. Ingested daily via kardashev-data.</p>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>
                 Source:{" "}
                 <a href="https://data.kardashevlabs.org/curtailment/summary" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org</a>
@@ -263,7 +263,7 @@ export default async function HomePage() {
               <div style={{ background: "#050f0b", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <Image
                   src="/images/og-duck-curve.png"
-                  alt="The duck curve — midday solar dips net load, evening demand peaks"
+                  alt="The duck curve: midday solar dips net load, evening demand peaks"
                   width={1200}
                   height={630}
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -274,7 +274,7 @@ export default async function HomePage() {
                 <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.45)", marginBottom: 16 }}>What is curtailment?</h2>
                 <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.58)" }}>
                   When the grid can&apos;t absorb all available solar and wind, operators instruct generators
-                  to produce less — even when the sun is shining. High curtailment signals congested
+                  to produce less, even when the sun is shining. High curtailment signals congested
                   transmission, insufficient storage, or poor demand timing.
                 </p>
                 <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.45)", marginTop: 12 }}>
