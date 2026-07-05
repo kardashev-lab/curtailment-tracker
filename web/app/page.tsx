@@ -78,6 +78,7 @@ export default async function HomePage() {
       </div>
 
       {/* ── Hero (full-bleed photo) ── */}
+      <header>
       <FadeUp delay={0}>
         <CurtailmentHero>
           <div className="hero-inner">
@@ -131,8 +132,9 @@ export default async function HomePage() {
           </div>
         </CurtailmentHero>
       </FadeUp>
+      </header>
 
-      <div className="page-inner">
+      <main className="page-inner">
 
         {/* ── API failure banner (partial data still renders below) ── */}
         {apiError && hasData && (
@@ -150,6 +152,7 @@ export default async function HomePage() {
         )}
 
         {/* ── ISO cards ── */}
+        <h2 className="sr-only">Curtailment by ISO</h2>
         {hasData ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {summaries.map((s, i) => {
@@ -218,7 +221,7 @@ export default async function HomePage() {
                           </div>
                         </div>
                         <CurtailmentChart data={history} isoLabel={meta.label} />
-                        <div style={{ marginTop: 10, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.32)", fontFamily: MONO }}>
+                        <div style={{ marginTop: 10, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.55)", fontFamily: MONO }}>
                           {meta.source}
                         </div>
                       </div>
@@ -234,11 +237,11 @@ export default async function HomePage() {
               <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(251,113,133,0.85)", marginBottom: 10 }}>
                 Couldn&apos;t reach the data API
               </p>
-              <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.32)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 14px" }}>
+              <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 14px" }}>
                 The kardashev-data API didn&apos;t respond, so curtailment numbers can&apos;t be
                 shown right now. This is usually temporary. Refresh in a minute.
               </p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
                 Check status:{" "}
                 <a href="https://data.kardashevlabs.org/health" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org/health</a>
               </p>
@@ -248,7 +251,7 @@ export default async function HomePage() {
           <FadeUp delay={0.1}>
             <div style={{ borderRadius: 28, padding: "60px 40px", textAlign: "center", border: "1px solid rgba(52,211,153,0.12)", background: "#0b1812" }}>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", marginBottom: 12 }}>No data yet. Ingested daily via kardashev-data.</p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
                 Source:{" "}
                 <a href="https://data.kardashevlabs.org/curtailment/summary" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(52,211,153,0.75)", textDecoration: "none" }}>data.kardashevlabs.org</a>
               </p>
@@ -327,7 +330,7 @@ export default async function HomePage() {
                     { label: "Queue Tracker", href: "https://interconnection-queue.kardashevlabs.org" },
                     { label: "Grid Demand",   href: "https://grid-demand.kardashevlabs.org" },
                   ].map((t) => (
-                    <a key={t.label} href={t.href} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", padding: "8px 12px", borderRadius: 12, fontSize: 11, fontWeight: 500, textDecoration: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.52)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <a key={t.label} href={t.href} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", padding: "12px 14px", borderRadius: 12, fontSize: 11, fontWeight: 500, textDecoration: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.52)", border: "1px solid rgba(255,255,255,0.07)" }}>
                       {t.label}
                     </a>
                   ))}
@@ -336,7 +339,7 @@ export default async function HomePage() {
             </div>
           </div>
         </FadeUp>
-      </div>
+      </main>
 
       {/* Footer */}
       <footer style={{ position: "relative", zIndex: 10, padding: "0 24px 40px" }}>

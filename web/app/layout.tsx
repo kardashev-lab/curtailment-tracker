@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "US Curtailment Tracker | Kardashev Labs",
   description:
     "Daily solar and wind curtailment across US ISOs. CAISO leads the nation. The duck curve problem made visible.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -53,10 +56,41 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "US Curtailment Tracker",
+      url: siteUrl,
+      description:
+        "Daily solar and wind curtailment across US ISOs, with a 90-day rolling history.",
+      publisher: { "@id": "https://kardashevlabs.org#organization" },
+    },
+    {
+      "@type": "Dataset",
+      name: "US Curtailment Tracker Data",
+      description:
+        "Daily solar and wind curtailment across CAISO, SPP, and ERCOT. When the grid can't absorb all available solar and wind, operators instruct generators to produce less, even when the sun is shining or wind is blowing. High curtailment signals congested transmission, insufficient storage, or poor demand timing.",
+      url: siteUrl,
+      creator: {
+        "@id": "https://kardashevlabs.org#organization",
+        "@type": "Organization",
+        name: "Kardashev Labs",
+        url: "https://kardashevlabs.org",
+      },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <body style={{ fontFamily: "var(--font-space-grotesk, 'Space Grotesk', system-ui, sans-serif)" }}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
       </body>
     </html>
