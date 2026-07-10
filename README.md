@@ -28,22 +28,25 @@ calls: `/curtailment/summary` and `/curtailment?days=90`.
 |-----|--------|-------|------|
 | CAISO | California | ✓ | ✓ |
 | SPP | Southwest Power Pool | — | ✓ |
-| ERCOT | Texas | — | ✓ |
 
 More ISOs coming. PRs welcome. New ISOs added upstream in kardashev-data show up here
 automatically.
+
+ERCOT has display metadata wired up in the dashboard (`web/app/page.tsx` `ISO_META`) but
+isn't live: real ERCOT curtailment data requires DUNS-gated MIS credentials, and public
+dashboard numbers aren't accurate enough to serve. It'll start showing up automatically
+once kardashev-data ingests a real source.
 
 ## Data sources
 
 - **CAISO**: [OASIS ENE_SLRS report](https://oasis.caiso.com) (Statewide Lost Renewable Statistics)
 - **SPP**: Wind curtailment derived from SPP market reports
-- **ERCOT**: Market curtailment reports
 
-All fetched daily by kardashev-data after ISOs finalize previous-day data.
+Fetched daily by kardashev-data after each ISO finalizes previous-day data.
 
 ## Stack
 
-- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Recharts
+- **Frontend**: Next.js 15, React 19, Tailwind CSS v4, Recharts, Framer Motion
 - **Data**: [kardashev-data](https://github.com/kardashev-lab/kardashev-data) API
 - **Infra**: Docker (standalone Next.js image)
 
