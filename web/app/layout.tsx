@@ -73,6 +73,7 @@ const jsonLd = {
       description:
         "Daily solar and wind curtailment across CAISO, SPP, and ERCOT. When the grid can't absorb all available solar and wind, operators instruct generators to produce less, even when the sun is shining or wind is blowing. High curtailment signals congested transmission, insufficient storage, or poor demand timing.",
       url: siteUrl,
+      license: "https://opensource.org/licenses/MIT",
       creator: {
         "@id": "https://kardashevlabs.org#organization",
         "@type": "Organization",
