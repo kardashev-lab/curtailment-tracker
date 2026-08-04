@@ -1,27 +1,33 @@
 # US Curtailment Tracker
 
-> Daily solar and wind curtailment across CAISO (California), SPP (Southwest Power Pool), and ERCOT (Texas), with a 90-day rolling history. Shows where the grid is congested and where battery storage is needed most.
+> Daily solar and wind curtailment for CAISO, SPP, and ERCOT, with a 90-day history.
 
-Part of [Kardashev Labs](https://kardashevlabs.org), which builds free, open-source tools for US energy grid intelligence.
+Part of [Kardashev Labs](https://kardashevlabs.org).
 
-## What This Tool Shows
+## What it shows
 
-- Daily solar and wind curtailment (MWh) by ISO: today's total, 30-day totals, and a 90-day trend chart
-- Covers CAISO, SPP, and ERCOT
-- Updated daily via the kardashev-data platform
+- Daily curtailed MWh by ISO (today, 30-day, 90-day trend)
+- CAISO, SPP, ERCOT
+- Morning refresh via kardashev-data
 
-## Key Terms
+## Terms
 
-- **Curtailment**: when the grid can't absorb all available solar and wind, operators instruct generators to produce less, even when the sun is shining or wind is blowing. High curtailment signals congested transmission, insufficient storage, or poor demand timing.
-- **Duck curve**: the shape of net electricity demand (demand minus solar/wind output) over a day, named for its duck-like silhouette. Midday solar output causes net load to dip sharply, then evening demand ramps up fast as solar fades — this steep ramp is what makes curtailment and storage valuable in CAISO.
+- **Curtailment**: operators tell solar/wind to produce less because the grid cannot take the energy right then. High curtailment usually means congested lines, missing storage, or demand timed wrong.
+- **Duck curve**: net load over a day after subtracting solar/wind. Midday solar dips the curve; evening demand ramps fast as solar fades. That ramp is why CAISO cares about curtailment and storage.
 
-## Key Facts
+## Related
 
-- CAISO leads the nation in solar curtailment (the duck curve problem)
-- SPP leads in wind curtailment across the Great Plains
-- Free and open source (MIT license)
-- Source code: https://github.com/kardashev-lab/curtailment-tracker
-- Shared data layer: https://data.kardashevlabs.org (kardashev-data)
+- https://interconnection-queue.kardashevlabs.org
+- https://grid-demand.kardashevlabs.org
+- https://clearance.kardashevlabs.org
+- https://large-load-tracker.kardashevlabs.org
+- https://docs.kardashevlabs.org
+- https://data.kardashevlabs.org
+- https://kardashevlabs.org
+
+## Facts
+
+- Free / MIT
+- Code: https://github.com/kardashev-lab/curtailment-tracker
 - Site: https://curtailment-tracker.kardashevlabs.org
-- Parent site: https://kardashevlabs.org
 - Contact: ashutosh@kardashevlabs.org

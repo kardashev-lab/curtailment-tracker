@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "US Curtailment Tracker | Kardashev Labs",
   description:
-    "Daily solar and wind curtailment across US ISOs. CAISO leads the nation. The duck curve problem made visible.",
+    "Daily solar and wind curtailment for CAISO, SPP, and ERCOT. 90-day history.",
   alternates: {
     canonical: "/",
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     title: "US Curtailment Tracker | Kardashev Labs",
-    description: "How much clean energy is being thrown away every day, by ISO.",
+    description: "How much solar and wind CAISO, SPP, and ERCOT curtail each day.",
     url: siteUrl,
     siteName: "Kardashev Labs",
     images: [
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "US Curtailment Tracker | Kardashev Labs",
-    description: "How much clean energy is being thrown away every day, by ISO.",
+    description: "How much solar and wind CAISO, SPP, and ERCOT curtail each day.",
     images: ["/images/og-duck-curve.png"],
   },
 };

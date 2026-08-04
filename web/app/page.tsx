@@ -99,10 +99,10 @@ export default async function HomePage() {
               <>
                 <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 20, maxWidth: 720 }}>
                   <span style={{ color: "#fb7185" }}>{fmtGwh(caiso.total_mwh_today)}</span>
-                  {" "}of clean energy wasted yesterday in California
+                  {" "}curtailed in California yesterday
                 </h1>
                 <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.55)", maxWidth: 460, marginBottom: 32 }}>
-                  The duck curve problem made visible. {fmtDate(caiso.latest_date)} · {summaries.length} ISO{summaries.length !== 1 ? "s" : ""} tracked.
+                  Solar and wind the grid could not take. {fmtDate(caiso.latest_date)} · {summaries.length} ISO{summaries.length !== 1 ? "s" : ""} tracked.
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
                   {[
@@ -124,8 +124,8 @@ export default async function HomePage() {
                   US Curtailment <span style={{ color: "#fb7185" }}>Tracker</span>
                 </h1>
                 <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.55)", maxWidth: 460 }}>
-                  How much solar and wind is thrown away every day, by ISO.
-                  Curtailment signals where the grid is congested and where storage is needed.
+                  Daily solar and wind curtailment for CAISO, SPP, and ERCOT.
+                  High numbers usually mean congestion or missing storage.
                 </p>
               </>
             )}
@@ -328,7 +328,9 @@ export default async function HomePage() {
                 <div className="related-tools">
                   {[
                     { label: "Queue Tracker", href: "https://interconnection-queue.kardashevlabs.org" },
-                    { label: "Grid Demand",   href: "https://grid-demand.kardashevlabs.org" },
+                    { label: "Grid Demand", href: "https://grid-demand.kardashevlabs.org" },
+                    { label: "Site Clearance", href: "https://clearance.kardashevlabs.org" },
+                    { label: "Large Load", href: "https://large-load-tracker.kardashevlabs.org" },
                   ].map((t) => (
                     <a key={t.label} href={t.href} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: "center", padding: "12px 14px", borderRadius: 12, fontSize: 11, fontWeight: 500, textDecoration: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.52)", border: "1px solid rgba(255,255,255,0.07)" }}>
                       {t.label}
