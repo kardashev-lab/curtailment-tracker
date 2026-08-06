@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "framer-motion": "^12.40.0",
+    "kardashev-charts": "github:kardashev-lab/kardashev-charts#main",
     "next": "^15.5.19",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "recharts": "^2.15.3"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
