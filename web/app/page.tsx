@@ -124,7 +124,7 @@ export default async function HomePage() {
                   US Curtailment <span style={{ color: "#fb7185" }}>Tracker</span>
                 </h1>
                 <p style={{ fontSize: "1rem", lineHeight: 1.75, color: "rgba(255,255,255,0.55)", maxWidth: 460 }}>
-                  Daily solar and wind curtailment for CAISO, SPP, and ERCOT.
+                  Daily Published Curtailment (ISO/fuel grain) for CAISO, SPP, and ERCOT.
                   High numbers usually mean congestion or missing storage.
                 </p>
               </>
@@ -274,11 +274,12 @@ export default async function HomePage() {
                 />
               </div>
               <div style={{ padding: "24px 28px 28px" }}>
-                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.45)", marginBottom: 16 }}>What is curtailment?</h2>
+                <h2 style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.45)", marginBottom: 16 }}>What is Published Curtailment?</h2>
                 <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.58)" }}>
                   When the grid can&apos;t absorb all available solar and wind, operators instruct generators
-                  to produce less, even when the sun is shining. High curtailment signals congested
-                  transmission, insufficient storage, or poor demand timing.
+                  to produce less, even when the sun is shining. These pages show Published Curtailment at
+                  the ISO/fuel grain the ISO already publishes. Negative prices are Markets stress, not
+                  curtailment.
                 </p>
                 <p style={{ fontSize: "0.875rem", lineHeight: 1.8, color: "rgba(255,255,255,0.45)", marginTop: 12 }}>
                   CAISO leads in solar curtailment (the{" "}
